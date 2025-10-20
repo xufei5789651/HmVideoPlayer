@@ -1,0 +1,60 @@
+{
+  "app": {
+    "signingConfigs": [
+      {
+        "name": "default",
+        "type": "HarmonyOS",
+        "material": {
+          "certpath": "C:\\Users\\ASUS\\.ohos\\config\\default_HmVideoPlayer_W4jdHcwfoVAfgvpmJ_N4S9ZNjioK9PprxTzltZCC-1o=.cer",
+          "keyAlias": "debugKey",
+          "keyPassword": "0000001B58A33FCCE1E92AE1DFAD067C1A24118D1A86350697446EA5DB3E470D076EB26A15294D0B1271F3",
+          "profile": "C:\\Users\\ASUS\\.ohos\\config\\default_HmVideoPlayer_W4jdHcwfoVAfgvpmJ_N4S9ZNjioK9PprxTzltZCC-1o=.p7b",
+          "signAlg": "SHA256withECDSA",
+          "storeFile": "C:\\Users\\ASUS\\.ohos\\config\\default_HmVideoPlayer_W4jdHcwfoVAfgvpmJ_N4S9ZNjioK9PprxTzltZCC-1o=.p12",
+          "storePassword": "0000001BCA4D52967A6C90679A7DD8A33A7203E7CA3F46AA31B5E554CFEF3E412CD311834CD409E60D5A33"
+        }
+      }
+    ],
+    "products": [
+      {
+        "name": "default",
+        "signingConfig": "default",
+        "targetSdkVersion": "6.0.0(20)",
+        "compatibleSdkVersion": "5.0.0(12)",
+        "runtimeOS": "HarmonyOS",
+        "buildOption": {
+          "strictMode": {
+            "caseSensitiveCheck": true,
+            "useNormalizedOHMUrl": true
+          }
+        }
+      }
+    ],
+    "buildModeSet": [
+      {
+        "name": "debug",
+      },
+      {
+        "name": "release"
+      }
+    ]
+  },
+  "modules": [
+    {
+      "name": "entry",
+      "srcPath": "./entry",
+      "targets": [
+        {
+          "name": "default",
+          "applyToProducts": [
+            "default"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "hmvideoplayer",
+      "srcPath": "./hmvideoplayer",
+    }
+  ]
+}
