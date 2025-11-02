@@ -16,9 +16,7 @@ struct SampleInfo {
     int32_t inputFd = -1;
     int64_t inputFileOffset = 0;
     int64_t inputFileSize = 0;
-    
-//     int32_t outputFd = -1;
-//     std::string inputFilePath;
+
     // 视频编解码mime类型
     std::string videoCodecMime = "";
     std::string audioCodecMime = "";
@@ -52,14 +50,42 @@ struct SampleInfo {
     int64_t audioChannelLayout = 0;
     // 时长，微妙
     int64_t duration = 0;
+
     // 进度时间戳线程安全函数
     napi_threadsafe_function timestampFn;
     // 回调函数参数
     void *callbackData = nullptr;
+
     // 播放状态变化线程安全函数
     napi_threadsafe_function stateChangeFn;
-     // 播放状态回调函数参数
-    void *stateCallbackData=nullptr;
+    // 播放状态回调函数参数
+    void *stateCallbackData = nullptr;
+
+    // 处理音频并发打断线程安全函数
+    napi_threadsafe_function audioInterruptFn;
+    // 音频并发打断回调函数参数
+    void *interruptCallbackData = nullptr;
+
+    // 音频流输出设备变化及原因线程安全函数
+    napi_threadsafe_function outputDeviceChangeFn;
+    // 音频并发打断回调函数参数
+    void *outputDeviceChangeCallbackData = nullptr;
+
+    // 处理编解码码流发生变化线程安全函数
+    napi_threadsafe_function avcodecStreamChangeFn;
+    // 音频并发打断回调函数参数
+    void *avcodecStreamCallbackData = nullptr;
+
+    // 处理音频错误线程安全函数
+    napi_threadsafe_function audioErrorFn;
+    // 音频错误回调函数参数
+    void *audioErrorCallbackData = nullptr;
+
+    // 处理编解码错误线程安全函数
+    napi_threadsafe_function avcodecErrorFn;
+    // 编解码错误回调函数参数
+    void *avcodecErrorCallbackData = nullptr;
+
     // 视频是否HDRVivid
     int32_t isHDRVivid = 0;
     // 视频编码档次：HEVC编码档次为主档次
@@ -72,9 +98,6 @@ struct SampleInfo {
     OH_MatrixCoefficient matrix = MATRIX_COEFFICIENT_BT2020_CL;
     // 本地平台化窗口，表示图形队列的生产者端
     OHNativeWindow *window = nullptr;
-
-//     void (*playDoneCallback)(void *context) = nullptr;
-//     void *playDoneCallbackData = nullptr;
 };
 
 #endif // AVCODEC_SAMPLE_INFO_H

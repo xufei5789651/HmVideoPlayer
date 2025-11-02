@@ -1,8 +1,4 @@
-export { MainPage } from './src/main/ets/components/MainPage'
-
-export { TestPage } from './src/main/ets/components/TestPage'
-
-export { init } from './src/main/ets/manage/HmVideoPlayer'
+export { initWithURL } from './src/main/ets/manage/HmVideoPlayer'
 
 export { play } from './src/main/ets/manage/HmVideoPlayer'
 

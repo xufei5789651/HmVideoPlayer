@@ -16,7 +16,9 @@ private:
     static void onTimeUpdateCallJS(napi_env env, napi_value js_callBack,void *context,void *data);
     
 public:
-    static napi_value init(napi_env env, napi_callback_info info);
+    static napi_value initWithURL(napi_env env, napi_callback_info info);
+    
+    static napi_value initWithLocal(napi_env env, napi_callback_info info);
     
     static napi_value play(napi_env env, napi_callback_info info);
     
@@ -37,5 +39,7 @@ public:
     static napi_value onStateChange(napi_env env, napi_callback_info info);
     
     static napi_value RatePlay(napi_env env, napi_callback_info info);
+    
+    static napi_value onAudioInterrupt(napi_env env, napi_callback_info info);
 };
 #endif // VIDEO_CODEC_SAMPLE_PLAYER_NATIVE_H

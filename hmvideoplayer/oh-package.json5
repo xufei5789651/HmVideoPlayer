@@ -1,9 +1,12 @@
 {
-  "name": "hmvideoplayer",
+  "name": "@glodentime/hmvideoplayer",
   "version": "1.0.0",
-  "description": "Please describe the basic information.",
+  "description": "基于HarmonyOS SDK 一款视频播放器",
   "main": "Index.ets",
-  "author": "",
+  "author": "xufei5789651",
+  "homepage": "https://github.com/xufei5789651",
+  "repository": "https://github.com/xufei5789651/HmVideoPlayer",
+  "keywords": ["多媒体","视频播放器"],
   "license": "Apache-2.0",
   "dependencies": {
     "libhmvideoplayer.so": "file:./src/main/cpp/types/libhmvideoplayer"

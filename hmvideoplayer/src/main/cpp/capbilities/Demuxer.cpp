@@ -6,15 +6,27 @@
 Demuxer::~Demuxer() { Release(); }
 
 int32_t Demuxer::Create(SampleInfo &info) {
-//     source = OH_AVSource_CreateWithFD(info.inputFd, info.inputFileOffset, info.inputFileSize);
-//     CHECK_AND_RETURN_RET_LOG(source != nullptr, AVCODEC_SAMPLE_ERR_ERROR,
-//                              "Create demuxer source failed, fd: %{public}d, offset: %{public}" PRId64
-//                              ", file size: %{public}" PRId64,
-//                              info.inputFd, info.inputFileOffset, info.inputFileSize);
-    // 在线视频
-    char *url = const_cast<char *>(info.url.c_str());
-    AVCODEC_SAMPLE_LOGD("Demuxer video url:%{public}s", url);
-    source = OH_AVSource_CreateWithURI(url);
+    if (info.inputFd > 0) {
+        source = OH_AVSource_CreateWithFD(info.inputFd, info.inputFileOffset, info.inputFileSize);
+        if (source == nullptr) {
+            LOGE("Create demuxer source failed, fd: %{public}d, offset: %{public}" PRId64
+                 ", file size: %{public}" PRId64,
+                 info.inputFd, info.inputFileOffset, info.inputFileSize);
+        }
+    } else if (info.url.size() > 0 &&
+               (info.url.find("https://") != std::string::npos || info.url.find("https://") != std::string::npos)) {
+        // 在线视频
+        char *url = const_cast<char *>(info.url.c_str());
+        AVCODEC_SAMPLE_LOGD("Demuxer video url:%{public}s", url);
+        source = OH_AVSource_CreateWithURI(url);
+    } else {
+        LOGE("Demuxer video source failed");
+    }
+
+    if (source == nullptr) {
+        LOGE("Create demuxer source failed");
+        return AVCODEC_SAMPLE_ERR_ERROR;
+    }
 
     demuxer = OH_AVDemuxer_CreateWithSource(source);
     CHECK_AND_RETURN_RET_LOG(demuxer != nullptr, AVCODEC_SAMPLE_ERR_ERROR, "Create demuxer failed");
@@ -68,6 +80,8 @@ int32_t Demuxer::GetTrackInfo(std::shared_ptr<OH_AVFormat> sourceFormat, SampleI
             OH_AVFormat_GetStringValue(trackFormat.get(), OH_MD_KEY_CODEC_MIME,
                                        const_cast<char const **>(&videoCodecMime));
             info.videoCodecMime = videoCodecMime;
+            
+            OH_AVFormat_GetIntValue(trackFormat.get(), OH_MD_KEY_VIDEO_IS_HDR_VIVID, &info.isHDRVivid);
             OH_AVFormat_GetIntValue(trackFormat.get(), OH_MD_KEY_PROFILE, &info.hevcProfile);
             videoTrackId = index;
 

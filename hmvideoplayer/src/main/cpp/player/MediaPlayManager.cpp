@@ -54,11 +54,26 @@ int32_t MediaPlayManager::CreateAudioDecoder() {
         LOGW("Init audioSampleRate: %{public}d, ChannelCount: %{public}d", sampleInfo.audioSampleRate,sampleInfo.audioChannelCount);
         OH_AudioRenderer_Callbacks callbacks;
          // 设置音频回调函数
-        callbacks.OH_AudioRenderer_OnWriteData = OHAudioRenderCallback::OnRenderWriteData;
-        callbacks.OH_AudioRenderer_OnStreamEvent = OHAudioRenderCallback::OnRenderStreamEvent;
+        callbacks.OH_AudioRenderer_OnWriteData = nullptr;
+        callbacks.OH_AudioRenderer_OnStreamEvent = nullptr;
         callbacks.OH_AudioRenderer_OnInterruptEvent = OHAudioRenderCallback::OnRenderInterruptEvent;
         callbacks.OH_AudioRenderer_OnError = OHAudioRenderCallback::OnRenderError;
         OH_AudioStreamBuilder_SetRendererCallback(builder, callbacks, audioDecContext);
+        
+        OH_AudioRenderer_OnWriteDataCallback writeDataCb=OHAudioRenderCallback::OnWriteDataCallback;
+        OH_AudioStreamBuilder_SetRendererWriteDataCallback(builder, writeDataCb, audioDecContext);
+        
+        OH_AudioRenderer_OutputDeviceChangeCallback outputDeviceChangeCb=OHAudioRenderCallback::OnOutputDeviceChangeCallback;
+        OH_AudioStreamBuilder_SetRendererOutputDeviceChangeCallback(builder, outputDeviceChangeCb, audioDecContext);
+        
+        // api 20 起始
+//        OH_AudioRenderer_OnInterruptCallback interruptCb=OHAudioRenderCallback::OnInterruptCallback;
+//        OH_AudioStreamBuilder_SetRendererInterruptCallback(builder, interruptCb, audioDecContext);
+        
+        // api 20 起始
+//        OH_AudioRenderer_OnErrorCallback errorCb=OHAudioRenderCallback::OnErrorCallback;
+//        OH_AudioStreamBuilder_SetRendererErrorCallback(builder, errorCb, audioDecContext);
+        
         // 构造播放音频流
         OH_AudioStreamBuilder_GenerateRenderer(builder, &audioRenderer);
     }

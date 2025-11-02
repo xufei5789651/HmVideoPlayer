@@ -1,7 +1,7 @@
 import player from 'libhmvideoplayer.so';
 
-export function init(url: string) {
-  player.init(url);
+export function initWithURL(url: string) {
+  player.initWithURL(url);
 }
 
 export function play() {

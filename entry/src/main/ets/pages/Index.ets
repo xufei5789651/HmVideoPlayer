@@ -1,5 +1,5 @@
-import { getDuration, init, onStateChange, onTimeUpdate, pause, play,
-  ratePlay,release, resume, stop } from 'hmvideoplayer';
+import { getDuration, initWithURL, onStateChange, onTimeUpdate, pause, play,
+  ratePlay,release, resume, stop } from '@glodentime/hmvideoplayer';
 import { display } from '@kit.ArkUI';
 
 @Entry
@@ -43,7 +43,7 @@ struct Index {
         Column() {
           Button('init')
             .onClick(() => {
-              init(this.URL);
+              initWithURL(this.URL);
             })
             .size({
               width: '100%',
