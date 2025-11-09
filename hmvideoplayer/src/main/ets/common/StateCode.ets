@@ -1,0 +1,11 @@
+
+export enum StateCode{
+  INIT=1,
+  PREPARED,
+  PLAYING,
+  PAUSED,
+  COMPLETED,
+  STOPPED,
+  RELEASE,
+  ERROR
+}

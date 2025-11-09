@@ -1,5 +1,4 @@
-import { getDuration, initWithURL, onStateChange, onTimeUpdate, pause, play,
-  ratePlay,release, resume, stop } from '@glodentime/hmvideoplayer';
+import { HmVideoPlayer } from '@glodentime/hmvideoplayer';
 import { display } from '@kit.ArkUI';
 
 @Entry
@@ -43,7 +42,7 @@ struct Index {
         Column() {
           Button('init')
             .onClick(() => {
-              initWithURL(this.URL);
+              HmVideoPlayer.initWithURL(this.URL);
             })
             .size({
               width: '100%',
@@ -60,7 +59,7 @@ struct Index {
         Column() {
           Button('play')
             .onClick(() => {
-              play();
+              HmVideoPlayer.play();
             })
             .size({
               width: '100%',
@@ -77,7 +76,7 @@ struct Index {
         Column() {
           Button('pause')
             .onClick(() => {
-              pause();
+              HmVideoPlayer.pause();
             })
             .size({
               width: '100%',
@@ -94,7 +93,7 @@ struct Index {
         Column() {
           Button('resume')
             .onClick(() => {
-              resume();
+              HmVideoPlayer.resume();
             })
             .size({
               width: '100%',
@@ -111,7 +110,7 @@ struct Index {
         Column() {
           Button('stop')
             .onClick(() => {
-              stop();
+              HmVideoPlayer.stop();
             })
             .size({
               width: '100%',
@@ -128,7 +127,7 @@ struct Index {
         Column() {
           Button('release')
             .onClick(() => {
-              release();
+              HmVideoPlayer.release();
             })
             .size({
               width: '100%',
@@ -145,7 +144,7 @@ struct Index {
         Column() {
           Button('duration:' + this.duration)
             .onClick(() => {
-              this.duration = getDuration();
+              this.duration = HmVideoPlayer.getDuration();
             })
             .size({
               width: '100%',
@@ -162,7 +161,7 @@ struct Index {
         Column() {
           Button('timestamp:' + this.timestamp)
             .onClick(() => {
-              onTimeUpdate((timestamp: number) => {
+              HmVideoPlayer.onTimeUpdate((timestamp: number) => {
                 this.timestamp = timestamp;
               });
             })
@@ -181,7 +180,7 @@ struct Index {
         Column() {
           Button('stateChange:' + this.stateChange)
             .onClick(() => {
-              onStateChange((state: number) => {
+              HmVideoPlayer.onStateChange((state: number) => {
                 this.stateChange = state;
               });
             })
@@ -200,7 +199,7 @@ struct Index {
         Column() {
           Button($r('app.string.rate1'))
             .onClick(() => {
-              ratePlay(1);
+              HmVideoPlayer.ratePlay(1);
             })
             .size({
               width: '100%',
@@ -217,7 +216,7 @@ struct Index {
         Column() {
           Button($r('app.string.rate2'))
             .onClick(() => {
-              ratePlay(2);
+              HmVideoPlayer.ratePlay(2);
             })
             .size({
               width: '100%',

@@ -22,7 +22,6 @@ napi_value HmPlayer::RatePlay(napi_env env, napi_callback_info info) {
 }
 
 napi_value HmPlayer::initWithURL(napi_env env, napi_callback_info info) {
-    SampleInfo sampleInfo;
     size_t argc = 1;
     napi_value args[1] = {nullptr};
     napi_get_cb_info(env, info, &argc, args, nullptr, nullptr);
@@ -54,7 +53,6 @@ napi_value HmPlayer::initWithURL(napi_env env, napi_callback_info info) {
 }
 
 napi_value HmPlayer::initWithLocal(napi_env env, napi_callback_info info) {
-    SampleInfo sampleInfo;
     size_t argc = 3;
     napi_value args[3] = {nullptr};
     napi_get_cb_info(env, info, &argc, args, nullptr, nullptr);
@@ -138,7 +136,7 @@ napi_value HmPlayer::seek(napi_env env, napi_callback_info info) {
 napi_value HmPlayer::getDuration(napi_env env, napi_callback_info info) {
     int64_t resultCode = MediaPlayManager::GetInstance().GetDuration();
     napi_value result;
-    napi_create_int64(env, resultCode, &result);
+    napi_create_int64(env, resultCode/1000, &result);
     return result;
 }
 
