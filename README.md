@@ -103,3 +103,6 @@ onPageHide():void {
   |seek  |position: bigint  | void | 跳转至指定进度 |
   |onTimeUpdate  |callback: (timestamp: number) => void | void | 获取当前播放进度时间戳 |
   |onStateChange  |callback: (state: number) => void  | void | 注册播放状态变更监听 |
+
+## 开源协议
+本项目基于 Apache License 2.0 ，在拷贝和借鉴代码时，请大家务必注明出处。
