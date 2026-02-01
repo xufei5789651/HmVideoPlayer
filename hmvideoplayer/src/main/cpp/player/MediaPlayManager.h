@@ -41,11 +41,15 @@ public:
     int32_t Seek(int64_t position);
     // 设置时间戳回调函数
     void setTimeStampCallback(SampleInfo &sampleInfo);
-    
+    // 设置状态变化回调函数
     void setStateChangeCallback(SampleInfo &sampleInfo);
-    
+    // 设置音频打断回调函数
+    void setAudioInterrupt(SampleInfo &sampleInfo);
+    // 设置输出设备变化回调函数
+    void setOutputDeviceChange(SampleInfo &sampleInfo);
+    // 释放资源
     void Release();
-    
+    // 倍速播放
     void SetSpeed(float speed);
 
 private:

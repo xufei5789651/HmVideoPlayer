@@ -20,6 +20,7 @@ set(BASE_LIBRARY
     libace_napi.z.so libEGL.so libGLESv3.so libace_ndk.z.so libuv.so libhilog_ndk.z.so
     libnative_media_codecbase.so libnative_media_core.so libnative_media_vdec.so libnative_window.so
     libnative_media_acodec.so libnative_media_avdemuxer.so libnative_media_avsource.so libohaudio.so
+    libdeviceinfo_ndk.z.so
 )
 
 add_library(hmvideoplayer SHARED player/HmPlayer.cpp

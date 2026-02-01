@@ -38,8 +38,10 @@ public:
     
     static napi_value onStateChange(napi_env env, napi_callback_info info);
     
-    static napi_value RatePlay(napi_env env, napi_callback_info info);
+    static napi_value ratePlay(napi_env env, napi_callback_info info);
     
     static napi_value onAudioInterrupt(napi_env env, napi_callback_info info);
+    
+    static napi_value onOutputDeviceChange(napi_env env, napi_callback_info info);
 };
 #endif // VIDEO_CODEC_SAMPLE_PLAYER_NATIVE_H

@@ -1,6 +1,7 @@
 import { HmVideoPlayer, StateCode } from '@glodentime/hmvideoplayer';
 import { display } from '@kit.ArkUI';
 import { secondToTime } from '../utils/Utils';
+import { audio } from '@kit.AudioKit';
 
 const WIDTH_PX: number = 1920;
 const HEIGHT_PX: number = 1080;
@@ -48,8 +49,34 @@ struct MainPage {
           this.isPlay = false;
           break;
       }
-    })
+    });
 
+    HmVideoPlayer.onAudioInterrupt((forceType: number, hint: number) => {
+      if (forceType === audio.InterruptForceType.INTERRUPT_FORCE) {
+        switch (hint) {
+          case audio.InterruptHint.INTERRUPT_HINT_PAUSE:
+            HmVideoPlayer.pause();
+            break;
+          case audio.InterruptHint.INTERRUPT_HINT_STOP:
+            HmVideoPlayer.pause();
+            break;
+        }
+      } else if (forceType === audio.InterruptForceType.INTERRUPT_SHARE) {
+        switch (hint) {
+          case audio.InterruptHint.INTERRUPT_HINT_RESUME:
+            HmVideoPlayer.resume();
+            break;
+        }
+      }
+    });
+
+    HmVideoPlayer.onOutputDeviceChange((deviceChange: number) => {
+      if (deviceChange === audio.AudioStreamDeviceChangeReason.REASON_OLD_DEVICE_UNAVAILABLE) {
+        HmVideoPlayer.pause();
+      } else if (deviceChange === audio.AudioStreamDeviceChangeReason.REASON_NEW_DEVICE_AVAILABLE) {
+        HmVideoPlayer.resume();
+      }
+    })
   }
 
   private setVideoDuration() {

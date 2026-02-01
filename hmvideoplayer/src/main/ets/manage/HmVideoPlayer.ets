@@ -15,8 +15,8 @@ export class HmVideoPlayer {
    * @param inputFileOffset
    * @param inputFileSize
    */
-  static initWithLocal(inputFileFd: number,inputFileOffset: number,inputFileSize: number) {
-    player.initWithLocal(inputFileFd,inputFileOffset,inputFileSize);
+  static initWithLocal(inputFileFd: number, inputFileOffset: number, inputFileSize: number) {
+    player.initWithLocal(inputFileFd, inputFileOffset, inputFileSize);
   }
 
   /**
@@ -92,6 +92,14 @@ export class HmVideoPlayer {
    */
   static onAudioInterrupt(callback: (forceType: number, hint: number) => void) {
     player.onAudioInterrupt(callback);
+  }
+
+  /**
+   * 注册输出设备变化监听
+   * @param callback
+   */
+  static onOutputDeviceChange(callback: (deviceChange: number) => void) {
+    player.onOutputDeviceChange(callback);
   }
 
   /**

@@ -10,7 +10,7 @@
 bool isRelease;
 SampleInfo sampleInfo;
 
-napi_value HmPlayer::RatePlay(napi_env env, napi_callback_info info) {
+napi_value HmPlayer::ratePlay(napi_env env, napi_callback_info info) {
     double speed;
     size_t argc = 1;
     napi_value args[1] = {nullptr};
@@ -62,11 +62,11 @@ napi_value HmPlayer::initWithLocal(napi_env env, napi_callback_info info) {
         AVCODEC_SAMPLE_LOGD("init get params failed");
         return nullptr;
     }
-    
+
     napi_get_value_int32(env, args[0], &sampleInfo.inputFd);
     napi_get_value_int64(env, args[1], &sampleInfo.inputFileOffset);
     napi_get_value_int64(env, args[2], &sampleInfo.inputFileSize);
-    
+
     isRelease = false;
     int32_t resultCode = MediaPlayManager::GetInstance().Init(sampleInfo);
 
@@ -136,7 +136,7 @@ napi_value HmPlayer::seek(napi_env env, napi_callback_info info) {
 napi_value HmPlayer::getDuration(napi_env env, napi_callback_info info) {
     int64_t resultCode = MediaPlayManager::GetInstance().GetDuration();
     napi_value result;
-    napi_create_int64(env, resultCode/1000, &result);
+    napi_create_int64(env, resultCode / 1000, &result);
     return result;
 }
 
@@ -250,10 +250,10 @@ void audioInterruptCallback(napi_env env, napi_value js_callBack, void *context,
     napi_value callback = nullptr;
     napi_get_reference_value(callBackContext->env, callBackContext->callbackRef, &callback);
 
-    napi_value argv[2]={nullptr};
+    napi_value argv[2] = {nullptr};
     napi_create_int32(callBackContext->env, callBackContext->forceType, &argv[0]);
     napi_create_int32(callBackContext->env, callBackContext->hint, &argv[1]);
-    
+
     napi_call_function(callBackContext->env, nullptr, callback, 2, argv, nullptr);
 
     LOGD("HmPlayer audioInterruptCallback is execute...%{public}d", callBackContext->forceType);
@@ -290,7 +290,60 @@ napi_value HmPlayer::onAudioInterrupt(napi_env env, napi_callback_info info) {
 
     callBackContext->env = env;
     napi_create_reference(env, js_callback, 1, &callBackContext->callbackRef);
+    MediaPlayManager::GetInstance().setAudioInterrupt(sampleInfo);
+    return nullptr;
+}
 
+void outputDeviceChangeCallback(napi_env env, napi_value js_callBack, void *context, void *contextData) {
+    CallBackContext *callBackContext = reinterpret_cast<CallBackContext *>(contextData);
+    if (callBackContext == nullptr) {
+        LOGE("stateChangeCallback function callBackContext nullptr");
+        return;
+    }
+
+    napi_value callback = nullptr;
+    napi_get_reference_value(callBackContext->env, callBackContext->callbackRef, &callback);
+
+    napi_value argv[1] = {nullptr};
+    napi_create_int32(callBackContext->env, callBackContext->routingChange, &argv[0]);
+
+    napi_call_function(callBackContext->env, nullptr, callback, 1, argv, nullptr);
+
+    LOGD("HmPlayer audioInterruptCallback is execute...%{public}d", callBackContext->routingChange);
+    if (callBackContext && isRelease) {
+        napi_delete_reference(callBackContext->env, callBackContext->callbackRef);
+        delete callBackContext;
+        callBackContext = nullptr;
+    }
+}
+
+napi_value HmPlayer::onOutputDeviceChange(napi_env env, napi_callback_info info) {
+    size_t argc = 1;
+    napi_value js_callback;
+    napi_status status = napi_get_cb_info(env, info, &argc, &js_callback, nullptr, nullptr);
+    if (status != napi_ok) {
+        LOGE("HmPlayer onStateChange get params failed");
+        return nullptr;
+    }
+
+    napi_valuetype valueType = napi_undefined;
+    napi_typeof(env, js_callback, &valueType);
+    if (valueType != napi_valuetype::napi_function) {
+        LOGE("HmPlayer js_callback failed");
+        return nullptr;
+    }
+
+    napi_value workName;
+    napi_create_string_utf8(env, "onOutputDeviceChange", NAPI_AUTO_LENGTH, &workName);
+    napi_create_threadsafe_function(env, nullptr, nullptr, workName, 0, 1, nullptr, nullptr, nullptr,
+                                    outputDeviceChangeCallback, &sampleInfo.outputDeviceChangeFn);
+
+    auto callBackContext = new CallBackContext();
+    sampleInfo.outputDeviceChangeCallbackData = callBackContext;
+
+    callBackContext->env = env;
+    napi_create_reference(env, js_callback, 1, &callBackContext->callbackRef);
+    MediaPlayManager::GetInstance().setOutputDeviceChange(sampleInfo);
     return nullptr;
 }
 
@@ -309,7 +362,8 @@ static napi_value Init(napi_env env, napi_value exports) {
         {"onTimeUpdate", nullptr, HmPlayer::onTimeUpdate, nullptr, nullptr, nullptr, napi_default, nullptr},
         {"onStateChange", nullptr, HmPlayer::onStateChange, nullptr, nullptr, nullptr, napi_default, nullptr},
         {"onAudioInterrupt", nullptr, HmPlayer::onAudioInterrupt, nullptr, nullptr, nullptr, napi_default, nullptr},
-        {"ratePlay", nullptr, HmPlayer::RatePlay, nullptr},
+        {"onOutputDeviceChange", nullptr, HmPlayer::onOutputDeviceChange, nullptr, nullptr, nullptr, napi_default, nullptr},
+        {"ratePlay", nullptr, HmPlayer::ratePlay, nullptr, nullptr, nullptr, napi_default, nullptr},
     };
 
     NativeXComponentSample::PluginManager::GetInstance()->Export(env, exports);

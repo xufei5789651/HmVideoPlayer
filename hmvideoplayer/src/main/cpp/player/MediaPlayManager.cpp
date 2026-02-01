@@ -7,12 +7,14 @@
 #include "utils/ResultCode.h"
 #include <cstdint>
 #include <queue>
+#include <deviceinfo.h>
 #include "OHAudioRenderCallback.h"
 
 #undef LOG_TAG
 #define LOG_TAG "player"
 
 namespace {
+constexpr int MIN_API_VERSION_6_0_0 = 60000;
 constexpr int BALANCE_VALUE = 5;
 constexpr int64_t WAIT_TIME_US_THRESHOLD_WARNING = -1 * 40 * 1000; // warning threshold 40ms
 constexpr int64_t WAIT_TIME_US_THRESHOLD = 1 * 1000 * 1000;        // max sleep time 1s
@@ -56,9 +58,6 @@ int32_t MediaPlayManager::CreateAudioDecoder() {
          // 设置音频回调函数
         callbacks.OH_AudioRenderer_OnWriteData = nullptr;
         callbacks.OH_AudioRenderer_OnStreamEvent = nullptr;
-        callbacks.OH_AudioRenderer_OnInterruptEvent = OHAudioRenderCallback::OnRenderInterruptEvent;
-        callbacks.OH_AudioRenderer_OnError = OHAudioRenderCallback::OnRenderError;
-        OH_AudioStreamBuilder_SetRendererCallback(builder, callbacks, audioDecContext);
         
         OH_AudioRenderer_OnWriteDataCallback writeDataCb=OHAudioRenderCallback::OnWriteDataCallback;
         OH_AudioStreamBuilder_SetRendererWriteDataCallback(builder, writeDataCb, audioDecContext);
@@ -66,14 +65,20 @@ int32_t MediaPlayManager::CreateAudioDecoder() {
         OH_AudioRenderer_OutputDeviceChangeCallback outputDeviceChangeCb=OHAudioRenderCallback::OnOutputDeviceChangeCallback;
         OH_AudioStreamBuilder_SetRendererOutputDeviceChangeCallback(builder, outputDeviceChangeCb, audioDecContext);
         
-        // api 20 起始
-//        OH_AudioRenderer_OnInterruptCallback interruptCb=OHAudioRenderCallback::OnInterruptCallback;
-//        OH_AudioStreamBuilder_SetRendererInterruptCallback(builder, interruptCb, audioDecContext);
-        
-        // api 20 起始
-//        OH_AudioRenderer_OnErrorCallback errorCb=OHAudioRenderCallback::OnErrorCallback;
-//        OH_AudioStreamBuilder_SetRendererErrorCallback(builder, errorCb, audioDecContext);
-        
+        if (OH_GetDistributionOSApiVersion() >= MIN_API_VERSION_6_0_0) {
+            // api 20 起始
+            OH_AudioRenderer_OnInterruptCallback interruptCb = OHAudioRenderCallback::OnInterruptCallback;
+            OH_AudioStreamBuilder_SetRendererInterruptCallback(builder, interruptCb, audioDecContext);
+            // api 20 起始
+            OH_AudioRenderer_OnErrorCallback errorCb = OHAudioRenderCallback::OnErrorCallback;
+            OH_AudioStreamBuilder_SetRendererErrorCallback(builder, errorCb, audioDecContext);
+        } else {
+            callbacks.OH_AudioRenderer_OnInterruptEvent = OHAudioRenderCallback::OnRenderInterruptEvent;
+            callbacks.OH_AudioRenderer_OnError = OHAudioRenderCallback::OnRenderError;
+            
+            OH_AudioStreamBuilder_SetRendererCallback(builder, callbacks, audioDecContext);
+        }
+                
         // 构造播放音频流
         OH_AudioStreamBuilder_GenerateRenderer(builder, &audioRenderer);
     }
@@ -354,6 +359,16 @@ void MediaPlayManager::setStateChangeCallback(SampleInfo &sampleInfo) {
     this->sampleInfo.stateChangeFn = sampleInfo.stateChangeFn;
 }
 
+void MediaPlayManager::setAudioInterrupt(SampleInfo &sampleInfo) {
+    this->sampleInfo.interruptCallbackData = sampleInfo.interruptCallbackData;
+    this->sampleInfo.audioInterruptFn = sampleInfo.audioInterruptFn;
+}
+
+void MediaPlayManager::setOutputDeviceChange(SampleInfo &sampleInfo) {
+    this->sampleInfo.outputDeviceChangeCallbackData = sampleInfo.outputDeviceChangeCallbackData;
+    this->sampleInfo.outputDeviceChangeFn = sampleInfo.outputDeviceChangeFn;
+}
+
 void MediaPlayManager::SetSpeed(float speed) {
     if (this->speed == speed) {
         AVCODEC_SAMPLE_LOGE("Same speed value");
@@ -444,7 +459,6 @@ void MediaPlayManager::Release() {
         }
     }
     
-//     doneCond.notify_all();
     AVCODEC_SAMPLE_LOGI("Succeed");
 }
 
@@ -453,15 +467,10 @@ void MediaPlayManager::VideoDecInputThread() {
         CHECK_AND_BREAK_LOG(isStarted, "Decoder input thread out");
         std::unique_lock<std::mutex> lock(videoDecContext->inputMutex);
         
-//         bool condRet = videoDecContext->inputCond.wait_for(
-//             lock, 5s, [this]() { return !isStarted || !videoDecContext->inputBufferInfoQueue.empty(); });
-
         videoDecContext->inputCond.wait(lock, [this]() {
             return !isPause.load() && (!isStarted || !videoDecContext->inputBufferInfoQueue.empty());
         });
         CHECK_AND_BREAK_LOG(isStarted, "Work done, thread out");
-//         CHECK_AND_CONTINUE_LOG(!videoDecContext->inputBufferInfoQueue.empty(),
-//                                "Buffer queue is empty, continue, cond ret: %{public}d", condRet);
 
         CodecBufferInfo bufferInfo = videoDecContext->inputBufferInfoQueue.front();
         videoDecContext->inputBufferInfoQueue.pop();
@@ -484,19 +493,12 @@ void MediaPlayManager::VideoDecOutputThread() {
         thread_local auto lastPushTime = std::chrono::system_clock::now();
         CHECK_AND_BREAK_LOG(isStarted, "VD Decoder output thread out");
         std::unique_lock<std::mutex> lock(videoDecContext->outputMutex);
-        
-//         bool condRet = videoDecContext->outputCond.wait_for(
-//             lock, 5s, [this]() { return !isStarted || !videoDecContext->outputBufferInfoQueue.empty(); });
-
 
         videoDecContext->outputCond.wait(lock, [this]() {
             return !isPause.load() && (!isStarted || !videoDecContext->outputBufferInfoQueue.empty());
         });
 
-
         CHECK_AND_BREAK_LOG(isStarted, "VD Decoder output thread out");
-//         CHECK_AND_CONTINUE_LOG(!videoDecContext->outputBufferInfoQueue.empty(),
-//                                "VD Buffer queue is empty, continue, cond ret: %{public}d", condRet);
 
         CodecBufferInfo bufferInfo = videoDecContext->outputBufferInfoQueue.front();
         videoDecContext->outputBufferInfoQueue.pop();
@@ -597,15 +599,11 @@ void MediaPlayManager::AudioDecInputThread() {
         CHECK_AND_BREAK_LOG(isStarted, "Decoder input thread out");
         std::unique_lock<std::mutex> lock(audioDecContext->inputMutex);
         
-//         bool condRet = audioDecContext->inputCond.wait_for(
-//             lock, 5s, [this]() { return !isStarted || !audioDecContext->inputBufferInfoQueue.empty(); });
         audioDecContext->inputCond.wait(lock, [this]() {
             return !isPause.load() && (!isStarted || !audioDecContext->inputBufferInfoQueue.empty());
         });
 
         CHECK_AND_BREAK_LOG(isStarted, "Work done, thread out");
-//         CHECK_AND_CONTINUE_LOG(!audioDecContext->inputBufferInfoQueue.empty(),
-//                                "Buffer queue is empty, continue, cond ret: %{public}d", condRet);
 
         CodecBufferInfo bufferInfo = audioDecContext->inputBufferInfoQueue.front();
         audioDecContext->inputBufferInfoQueue.pop();
@@ -637,7 +635,6 @@ void MediaPlayManager::AudioDecInputThread() {
         int32_t ret = audioDecoder->PushInputBuffer(bufferInfo);
         CHECK_AND_BREAK_LOG(ret == AVCODEC_SAMPLE_ERR_OK, "Push data failed, thread out");
 
-//         CHECK_AND_BREAK_LOG(!(bufferInfo.attr.flags & AVCODEC_BUFFER_FLAGS_EOS), "Catch EOS, thread out");
         if ((bufferInfo.attr.flags & AVCODEC_BUFFER_FLAGS_EOS) 
             && this->sampleInfo.stateCallbackData != nullptr && !isReleased) {
             CallBackContext *stateCallBackContext =reinterpret_cast<CallBackContext *>(this->sampleInfo.stateCallbackData);
@@ -665,15 +662,11 @@ void MediaPlayManager::AudioDecOutputThread() {
         CHECK_AND_BREAK_LOG(isStarted, "Decoder output thread out");
         std::unique_lock<std::mutex> lock(audioDecContext->outputMutex);
         
-//         bool condRet = audioDecContext->outputCond.wait_for(
-//             lock, 5s, [this]() { return !isStarted || !audioDecContext->outputBufferInfoQueue.empty(); });
         audioDecContext->outputCond.wait(lock, [this]() {
             return !isPause.load() && (!isStarted || !audioDecContext->outputBufferInfoQueue.empty());
         });
 
         CHECK_AND_BREAK_LOG(isStarted, "Decoder output thread out");
-//         CHECK_AND_CONTINUE_LOG(!audioDecContext->outputBufferInfoQueue.empty(),
-//                                "Buffer queue is empty, continue, cond ret: %{public}d", condRet);
 
         CodecBufferInfo bufferInfo = audioDecContext->outputBufferInfoQueue.front();
         audioDecContext->outputBufferInfoQueue.pop();
