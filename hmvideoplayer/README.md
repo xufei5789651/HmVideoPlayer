@@ -17,7 +17,7 @@ ohpm install @glodentime/hmvideoplayer
 
 ## 使用示例
 - 基础用法
-```typescript
+```
 
 XComponent({
   id: 'player',
@@ -37,34 +37,63 @@ onPageShow():void {
   this.setVideoPlayerCallback();
 }
 
-// 监听状态变化
-setVideoPlayerCallback(){
-  HmVideoPlayer.onStateChange((state: number) => {
-    switch (state) {
-      case StateCode.PREPARED:
-        this.isPlay = false;
-        this.setVideoDuration();
-        HmVideoPlayer.play();
-        break;
-      case StateCode.PLAYING:
-        this.isPlay = true;
-        this.setUpdateTimeCallback();
-        break;
-      case StateCode.PAUSED:
-        this.isPlay = false;
-        break;
-      case StateCode.STOPPED:
-        this.isPlay = false;
-        break;
-      case StateCode.COMPLETED:
-        this.isPlay = false;
-        break;
-      case StateCode.RELEASE:
-        this.isPlay = false;
-        break;
-    }
-  })
 
+setVideoPlayerCallback() {
+    // 注册播放状态变更监听
+    HmVideoPlayer.onStateChange((state: number) => {
+      switch (state) {
+        case StateCode.PREPARED:
+          this.isPlay = false;
+          this.setVideoDuration();
+          HmVideoPlayer.play();
+          break;
+        case StateCode.PLAYING:
+          this.isPlay = true;
+          this.setUpdateTimeCallback();
+          break;
+        case StateCode.PAUSED:
+          this.isPlay = false;
+          break;
+        case StateCode.STOPPED:
+          this.isPlay = false;
+          break;
+        case StateCode.COMPLETED:
+          this.isPlay = false;
+          break;
+        case StateCode.RELEASE:
+          this.isPlay = false;
+          break;
+      }
+    });
+
+    // 注册音频焦点变化监听
+    HmVideoPlayer.onAudioInterrupt((forceType: number, hint: number) => {
+      if (forceType === audio.InterruptForceType.INTERRUPT_FORCE) {
+        switch (hint) {
+          case audio.InterruptHint.INTERRUPT_HINT_PAUSE:
+            HmVideoPlayer.pause();
+            break;
+          case audio.InterruptHint.INTERRUPT_HINT_STOP:
+            HmVideoPlayer.pause();
+            break;
+        }
+      } else if (forceType === audio.InterruptForceType.INTERRUPT_SHARE) {
+        switch (hint) {
+          case audio.InterruptHint.INTERRUPT_HINT_RESUME:
+            HmVideoPlayer.resume();
+            break;
+        }
+      }
+    });
+
+    // 注册输出设备变化监听
+    HmVideoPlayer.onOutputDeviceChange((deviceChange: number) => {
+      if (deviceChange === audio.AudioStreamDeviceChangeReason.REASON_OLD_DEVICE_UNAVAILABLE) {
+        HmVideoPlayer.pause();
+      } else if (deviceChange === audio.AudioStreamDeviceChangeReason.REASON_NEW_DEVICE_AVAILABLE) {
+        HmVideoPlayer.resume();
+      }
+    })
 }
 
 // 获取视频时长
@@ -103,6 +132,9 @@ onPageHide():void {
   |seek  |position: bigint  | void | 跳转至指定进度 |
   |onTimeUpdate  |callback: (timestamp: number) => void | void | 获取当前播放进度时间戳 |
   |onStateChange  |callback: (state: number) => void  | void | 注册播放状态变更监听 |
+  |onAudioInterrupt |callback: (forceType: number, hint: number) => void | void | 注册音频焦点变化监听 |
+  |onOutputDeviceChange |callback: (deviceChange: number) => void | void | 注册输出设备变化监听 |
+  |ratePlay |speed: number |void | 倍速播放 |
 
 ## 开源协议
 本项目基于 Apache License 2.0 ，在拷贝和借鉴代码时，请大家务必注明出处。

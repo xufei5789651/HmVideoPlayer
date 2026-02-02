@@ -25,6 +25,7 @@ struct MainPage {
   }
 
   setVideoPlayerCallback() {
+    // 注册播放状态变更监听
     HmVideoPlayer.onStateChange((state: number) => {
       switch (state) {
         case StateCode.PREPARED:
@@ -51,6 +52,7 @@ struct MainPage {
       }
     });
 
+    // 注册音频焦点变化监听
     HmVideoPlayer.onAudioInterrupt((forceType: number, hint: number) => {
       if (forceType === audio.InterruptForceType.INTERRUPT_FORCE) {
         switch (hint) {
@@ -70,6 +72,7 @@ struct MainPage {
       }
     });
 
+    // 注册输出设备变化监听
     HmVideoPlayer.onOutputDeviceChange((deviceChange: number) => {
       if (deviceChange === audio.AudioStreamDeviceChangeReason.REASON_OLD_DEVICE_UNAVAILABLE) {
         HmVideoPlayer.pause();
