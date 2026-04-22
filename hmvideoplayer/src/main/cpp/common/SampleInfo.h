@@ -68,12 +68,12 @@ struct SampleInfo {
 
     // 音频流输出设备变化及原因线程安全函数
     napi_threadsafe_function outputDeviceChangeFn;
-    // 音频并发打断回调函数参数
+    // 音频输出设备变化及原因回调函数参数
     void *outputDeviceChangeCallbackData = nullptr;
 
     // 处理编解码码流发生变化线程安全函数
     napi_threadsafe_function avcodecStreamChangeFn;
-    // 音频并发打断回调函数参数
+    // 音频编解码码流发生变化回调函数参数
     void *avcodecStreamCallbackData = nullptr;
 
     // 处理音频错误线程安全函数

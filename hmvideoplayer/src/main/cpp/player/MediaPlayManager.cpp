@@ -159,6 +159,10 @@ int32_t MediaPlayManager::Init(SampleInfo &info) {
     if (audioDecContext != nullptr) {
         audioDecContext->sampleInfo = &sampleInfo;
     }
+    
+    if (videoDecContext != nullptr) {
+        videoDecContext->sampleInfo = &sampleInfo;
+    }
 
     isReleased = false;
     LOGI("MediaPlayManager Init Succeed");
@@ -364,9 +368,24 @@ void MediaPlayManager::setAudioInterrupt(SampleInfo &sampleInfo) {
     this->sampleInfo.audioInterruptFn = sampleInfo.audioInterruptFn;
 }
 
+void MediaPlayManager::setAudioError(SampleInfo &sampleInfo) {
+    this->sampleInfo.audioErrorCallbackData = sampleInfo.audioErrorCallbackData;
+    this->sampleInfo.audioErrorFn = sampleInfo.audioErrorFn;
+}
+
 void MediaPlayManager::setOutputDeviceChange(SampleInfo &sampleInfo) {
     this->sampleInfo.outputDeviceChangeCallbackData = sampleInfo.outputDeviceChangeCallbackData;
     this->sampleInfo.outputDeviceChangeFn = sampleInfo.outputDeviceChangeFn;
+}
+
+void MediaPlayManager::setCodecFormatChange(SampleInfo &sampleInfo) {
+    this->sampleInfo.avcodecStreamCallbackData = sampleInfo.avcodecStreamCallbackData;
+    this->sampleInfo.avcodecStreamChangeFn = sampleInfo.avcodecStreamChangeFn;
+}
+
+void MediaPlayManager::setCodecError(SampleInfo &sampleInfo) {
+    this->sampleInfo.audioErrorCallbackData = sampleInfo.audioErrorCallbackData;
+    this->sampleInfo.audioErrorFn = sampleInfo.audioErrorFn;
 }
 
 void MediaPlayManager::SetSpeed(float speed) {

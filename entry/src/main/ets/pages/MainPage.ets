@@ -7,6 +7,8 @@ const WIDTH_PX: number = 1920;
 const HEIGHT_PX: number = 1080;
 const SECOND_TO_MS: number = 1000;
 
+const TAG:string='MainPage';
+
 @Entry
 @ComponentV2
 struct MainPage {
@@ -21,6 +23,7 @@ struct MainPage {
   @Local currentTimestampStr: string = '00:00';
 
   onPageShow(): void {
+    console.log(TAG,'--->onPageShow');
     this.setVideoPlayerCallback();
   }
 
@@ -72,6 +75,11 @@ struct MainPage {
       }
     });
 
+    // 注册音频错误监听
+    HmVideoPlayer.onAudioError((errorAudioCode: number) => {
+      console.log(TAG,`errorAudioCode:${errorAudioCode}`);
+    });
+
     // 注册输出设备变化监听
     HmVideoPlayer.onOutputDeviceChange((deviceChange: number) => {
       if (deviceChange === audio.AudioStreamDeviceChangeReason.REASON_OLD_DEVICE_UNAVAILABLE) {
@@ -79,7 +87,19 @@ struct MainPage {
       } else if (deviceChange === audio.AudioStreamDeviceChangeReason.REASON_NEW_DEVICE_AVAILABLE) {
         HmVideoPlayer.resume();
       }
-    })
+    });
+
+    // 注册音视频编解码运行错误监听
+    HmVideoPlayer.onCodecError((errorAvcodecCode: number) => {
+      console.log(TAG,`errorAvcodecCode:${errorAvcodecCode}`);
+    });
+
+    // 注册码流信息变化，如：声道变化等
+    HmVideoPlayer.onCodecFormatChange((videoWidth: number, videoHeight: number, audioSampleFormat: number,
+      audioChannelCount: number, audioSampleRate: number, videoFrameRate: number) => {
+      console.log(TAG,`videoWidth:${videoWidth},videoHeight:${videoHeight},audioSampleFormat:${audioSampleFormat},
+      videoFrameRate:${videoFrameRate},audioChannelCount:${audioChannelCount},audioSampleRate:${audioSampleRate}`);
+    });
   }
 
   private setVideoDuration() {
@@ -109,6 +129,7 @@ struct MainPage {
           controller: this.xComponentController
         })
           .onLoad(() => {
+            console.log(TAG,'--->onLoad');
             this.xComponentController.setXComponentSurfaceRect({ surfaceWidth: WIDTH_PX, surfaceHeight: HEIGHT_PX });
             HmVideoPlayer.initWithURL(this.URL);
           })

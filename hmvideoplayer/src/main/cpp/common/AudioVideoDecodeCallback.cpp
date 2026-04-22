@@ -40,7 +40,7 @@ void AudioVideoDecodeCallback::OnCodecError(OH_AVCodec *codec, int32_t errorCode
 
 void AudioVideoDecodeCallback::OnCodecFormatChange(OH_AVCodec *codec, OH_AVFormat *format, void *userData) {
     AVCODEC_SAMPLE_LOGI("On codec format change");
-   /* if (userData == nullptr) {
+    if (userData == nullptr) {
         return;
     }
     (void)codec;
@@ -63,7 +63,7 @@ void AudioVideoDecodeCallback::OnCodecFormatChange(OH_AVCodec *codec, OH_AVForma
     OH_AVFormat_GetIntValue(format, OH_MD_KEY_AUD_CHANNEL_COUNT, &callback->audioChannelCount);
     OH_AVFormat_GetIntValue(format, OH_MD_KEY_AUD_SAMPLE_RATE, &callback->audioSampleRate);
     OH_AVFormat_GetDoubleValue(format, OH_MD_KEY_FRAME_RATE, &callback->videoFrameRate);
-    
+
     napi_status result = napi_acquire_threadsafe_function(param->sampleInfo->avcodecStreamChangeFn);
     if (result != napi_ok) {
         LOGE("AudioVideoDecodeCallback OnCodecError start napi_acquire_threadsafe_function failed");
@@ -74,7 +74,7 @@ void AudioVideoDecodeCallback::OnCodecFormatChange(OH_AVCodec *codec, OH_AVForma
     if (result != napi_ok) {
         LOGE("AudioVideoDecodeCallback OnCodecError start napi_acquire_threadsafe_function failed");
         return;
-    }*/
+    }
 }
 
 void AudioVideoDecodeCallback::OnNeedInputBuffer(OH_AVCodec *codec, uint32_t index, OH_AVBuffer *buffer,

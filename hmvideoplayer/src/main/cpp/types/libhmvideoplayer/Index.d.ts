@@ -24,4 +24,11 @@ export const onAudioInterrupt: (callback: (forceType: number, hint: number) => v
 
 export const onOutputDeviceChange: (callback: (deviceChange: number) => void) => any;
 
+export const onAudioError: (callback: (errorAudioCode: number) => void) => any;
+
+export const onCodecError: (callback: (errorAvcodecCode: number) => void) => any;
+
+export const onCodecFormatChange: (callback: (videoWidth: number, videoHeight: number, audioSampleFormat: number,
+  audioChannelCount: number, audioSampleRate: number, videoFrameRate: number) => void) => any;
+
 export const ratePlay: (speed: number) => any;

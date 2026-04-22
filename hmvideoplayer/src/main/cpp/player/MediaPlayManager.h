@@ -45,8 +45,14 @@ public:
     void setStateChangeCallback(SampleInfo &sampleInfo);
     // 设置音频打断回调函数
     void setAudioInterrupt(SampleInfo &sampleInfo);
+    // 设置音频错误回调函数
+    void setAudioError(SampleInfo &sampleInfo);
     // 设置输出设备变化回调函数
     void setOutputDeviceChange(SampleInfo &sampleInfo);
+     // 设置码流信息变化，如：声道变化等
+    void setCodecFormatChange(SampleInfo &sampleInfo);
+    // 设置音视频编解码运行错误
+    void setCodecError(SampleInfo &sampleInfo);
     // 释放资源
     void Release();
     // 倍速播放

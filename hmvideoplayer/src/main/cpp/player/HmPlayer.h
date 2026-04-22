@@ -43,5 +43,11 @@ public:
     static napi_value onAudioInterrupt(napi_env env, napi_callback_info info);
     
     static napi_value onOutputDeviceChange(napi_env env, napi_callback_info info);
+    
+    static napi_value onCodecFormatChange(napi_env env, napi_callback_info info);
+    
+    static napi_value onCodecError(napi_env env, napi_callback_info info);
+    
+    static napi_value onAudioError(napi_env env, napi_callback_info info);
 };
 #endif // VIDEO_CODEC_SAMPLE_PLAYER_NATIVE_H

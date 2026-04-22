@@ -1,6 +1,6 @@
 {
   "name": "@glodentime/hmvideoplayer",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "基于HarmonyOS SDK 一款视频播放器",
   "main": "Index.ets",
   "author": "xufei5789651",

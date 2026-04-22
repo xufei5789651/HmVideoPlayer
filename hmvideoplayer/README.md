@@ -5,6 +5,7 @@
 - 视频编解码：支持H.264、H.265
 - 流媒体：支持HTTP/HTTPS、HLS协议
 - 支持HDR Vivid、Audio Vivid 播放
+- 支持倍速播放
 
 ## 效果图
 
@@ -85,6 +86,11 @@ setVideoPlayerCallback() {
         }
       }
     });
+    
+    // 注册音频错误监听
+    HmVideoPlayer.onAudioError((errorAudioCode: number) => {
+      console.log(TAG,`errorAudioCode:${errorAudioCode}`);
+    });
 
     // 注册输出设备变化监听
     HmVideoPlayer.onOutputDeviceChange((deviceChange: number) => {
@@ -94,6 +100,18 @@ setVideoPlayerCallback() {
         HmVideoPlayer.resume();
       }
     })
+    
+    // 注册音视频编解码运行错误监听
+    HmVideoPlayer.onCodecError((errorAvcodecCode: number) => {
+      console.log(TAG,`errorAvcodecCode:${errorAvcodecCode}`);
+    });
+
+    // 注册码流信息变化，如：声道变化等
+    HmVideoPlayer.onCodecFormatChange((videoWidth: number, videoHeight: number, audioSampleFormat: number,
+      audioChannelCount: number, audioSampleRate: number, videoFrameRate: number) => {
+      console.log(TAG,`videoWidth:${videoWidth},videoHeight:${videoHeight},audioSampleFormat:${audioSampleFormat},
+      videoFrameRate:${videoFrameRate},audioChannelCount:${audioChannelCount},audioSampleRate:${audioSampleRate}`);
+    });
 }
 
 // 获取视频时长
@@ -134,6 +152,9 @@ onPageHide():void {
   |onStateChange  |callback: (state: number) => void  | void | 注册播放状态变更监听 |
   |onAudioInterrupt |callback: (forceType: number, hint: number) => void | void | 注册音频焦点变化监听 |
   |onOutputDeviceChange |callback: (deviceChange: number) => void | void | 注册输出设备变化监听 |
+  |onAudioError |callback: (errorAudioCode: number) => void | void | 注册音频错误监听 |
+  |onCodecFormatChange |callback: (videoWidth: number, videoHeight: number, audioSampleFormat: number,audioChannelCount: number, audioSampleRate: number, videoFrameRate: number) => void | void | 注册码流信息变化，如：声道变化等 |
+  |onCodecError |callback: (errorAvcodecCode: number) => void | void | 注册音视频编解码运行错误监听 |
   |ratePlay |speed: number |void | 倍速播放 |
 
 ## 开源协议

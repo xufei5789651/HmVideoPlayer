@@ -95,11 +95,36 @@ export class HmVideoPlayer {
   }
 
   /**
+   * 注册音频错误监听
+   * @param callback
+   */
+  static onAudioError(callback: (errorAudioCode: number) => void) {
+    player.onAudioError(callback);
+  }
+
+  /**
    * 注册输出设备变化监听
    * @param callback
    */
   static onOutputDeviceChange(callback: (deviceChange: number) => void) {
     player.onOutputDeviceChange(callback);
+  }
+
+  /**
+   * 注册音视频编解码运行错误监听
+   * @param callback
+   */
+  static onCodecError(callback: (errorAvcodecCode: number) => void) {
+    player.onCodecError(callback);
+  }
+
+  /**
+   * 注册码流信息变化，如：声道变化等
+   * @param callback
+   */
+  static onCodecFormatChange(callback: (videoWidth: number, videoHeight: number, audioSampleFormat: number,
+    audioChannelCount: number, audioSampleRate: number, videoFrameRate: number) => void) {
+    player.onCodecFormatChange(callback);
   }
 
   /**

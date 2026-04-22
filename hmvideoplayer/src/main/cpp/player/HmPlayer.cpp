@@ -294,6 +294,59 @@ napi_value HmPlayer::onAudioInterrupt(napi_env env, napi_callback_info info) {
     return nullptr;
 }
 
+void audioErrorCallback(napi_env env, napi_value js_callBack, void *context, void *contextData) {
+    CallBackContext *callBackContext = reinterpret_cast<CallBackContext *>(contextData);
+    if (callBackContext == nullptr) {
+        LOGE("audioErrorCallback function callBackContext nullptr");
+        return;
+    }
+
+    napi_value callback = nullptr;
+    napi_get_reference_value(callBackContext->env, callBackContext->callbackRef, &callback);
+
+    napi_value argv[1] = {nullptr};
+    napi_create_int32(callBackContext->env, callBackContext->errorAudioCode, &argv[0]);
+
+    napi_call_function(callBackContext->env, nullptr, callback, 1, argv, nullptr);
+
+    LOGD("HmPlayer audioErrorCallback is execute...%{public}d", callBackContext->errorAudioCode);
+    if (callBackContext && isRelease) {
+        napi_delete_reference(callBackContext->env, callBackContext->callbackRef);
+        delete callBackContext;
+        callBackContext = nullptr;
+    }
+}
+
+napi_value HmPlayer::onAudioError(napi_env env, napi_callback_info info) {
+    size_t argc = 1;
+    napi_value js_callback;
+    napi_status status = napi_get_cb_info(env, info, &argc, &js_callback, nullptr, nullptr);
+    if (status != napi_ok) {
+        LOGE("HmPlayer onAudioError get params failed");
+        return nullptr;
+    }
+
+    napi_valuetype valueType = napi_undefined;
+    napi_typeof(env, js_callback, &valueType);
+    if (valueType != napi_valuetype::napi_function) {
+        LOGE("HmPlayer js_callback failed");
+        return nullptr;
+    }
+
+    napi_value workName;
+    napi_create_string_utf8(env, "onAudioError", NAPI_AUTO_LENGTH, &workName);
+    napi_create_threadsafe_function(env, nullptr, nullptr, workName, 0, 1, nullptr, nullptr, nullptr,
+                                    audioErrorCallback, &sampleInfo.audioInterruptFn);
+
+    auto callBackContext = new CallBackContext();
+    sampleInfo.audioErrorCallbackData = callBackContext;
+
+    callBackContext->env = env;
+    napi_create_reference(env, js_callback, 1, &callBackContext->callbackRef);
+    MediaPlayManager::GetInstance().setAudioError(sampleInfo);
+    return nullptr;
+}
+
 void outputDeviceChangeCallback(napi_env env, napi_value js_callBack, void *context, void *contextData) {
     CallBackContext *callBackContext = reinterpret_cast<CallBackContext *>(contextData);
     if (callBackContext == nullptr) {
@@ -347,6 +400,122 @@ napi_value HmPlayer::onOutputDeviceChange(napi_env env, napi_callback_info info)
     return nullptr;
 }
 
+void codecFormatChangeCallback(napi_env env, napi_value js_callBack, void *context, void *contextData) {
+    CallBackContext *callBackContext = reinterpret_cast<CallBackContext *>(contextData);
+    if (callBackContext == nullptr) {
+        LOGE("codecFormatChangeCallback function callBackContext nullptr");
+        return;
+    }
+
+    napi_value callback = nullptr;
+    napi_get_reference_value(callBackContext->env, callBackContext->callbackRef, &callback);
+
+    napi_value argv[6] = {nullptr};
+    napi_create_int32(callBackContext->env, callBackContext->videoWidth, &argv[0]);
+    napi_create_int32(callBackContext->env, callBackContext->videoHeight, &argv[1]);
+    napi_create_int32(callBackContext->env, callBackContext->audioSampleFormat, &argv[2]);
+    napi_create_int32(callBackContext->env, callBackContext->audioChannelCount, &argv[3]);
+    napi_create_int32(callBackContext->env, callBackContext->audioSampleRate, &argv[4]);
+    napi_create_double(callBackContext->env, callBackContext->videoFrameRate, &argv[5]);
+
+    napi_call_function(callBackContext->env, nullptr, callback, 6, argv, nullptr);
+
+    LOGD("HmPlayer codecFormatChangeCallback is execute...%{public}d", callBackContext->videoWidth);
+    LOGD("HmPlayer codecFormatChangeCallback is execute...%{public}d", callBackContext->videoHeight);
+    LOGD("HmPlayer codecFormatChangeCallback is execute...%{public}d", callBackContext->audioSampleFormat);
+    LOGD("HmPlayer codecFormatChangeCallback is execute...%{public}d", callBackContext->audioChannelCount);
+    LOGD("HmPlayer codecFormatChangeCallback is execute...%{public}d", callBackContext->audioSampleRate);
+    LOGD("HmPlayer codecFormatChangeCallback is execute...%{public}f", callBackContext->videoFrameRate);
+    if (callBackContext && isRelease) {
+        napi_delete_reference(callBackContext->env, callBackContext->callbackRef);
+        delete callBackContext;
+        callBackContext = nullptr;
+    }
+}
+
+napi_value HmPlayer::onCodecFormatChange(napi_env env, napi_callback_info info) {
+    size_t argc = 1;
+    napi_value js_callback;
+    napi_status status = napi_get_cb_info(env, info, &argc, &js_callback, nullptr, nullptr);
+    if (status != napi_ok) {
+        LOGE("HmPlayer onCodecFormatChange get params failed");
+        return nullptr;
+    }
+
+    napi_valuetype valueType = napi_undefined;
+    napi_typeof(env, js_callback, &valueType);
+    if (valueType != napi_valuetype::napi_function) {
+        LOGE("HmPlayer js_callback failed");
+        return nullptr;
+    }
+
+    napi_value workName;
+    napi_create_string_utf8(env, "onCodecFormatChange", NAPI_AUTO_LENGTH, &workName);
+    napi_create_threadsafe_function(env, nullptr, nullptr, workName, 0, 1, nullptr, nullptr, nullptr,
+                                    codecFormatChangeCallback, &sampleInfo.avcodecStreamChangeFn);
+
+    auto callBackContext = new CallBackContext();
+    sampleInfo.avcodecStreamCallbackData = callBackContext;
+
+    callBackContext->env = env;
+    napi_create_reference(env, js_callback, 1, &callBackContext->callbackRef);
+    MediaPlayManager::GetInstance().setCodecFormatChange(sampleInfo);
+    return nullptr;
+}
+
+void codecErrorCallback(napi_env env, napi_value js_callBack, void *context, void *contextData) {
+    CallBackContext *callBackContext = reinterpret_cast<CallBackContext *>(contextData);
+    if (callBackContext == nullptr) {
+        LOGE("codecErrorCallback function callBackContext nullptr");
+        return;
+    }
+
+    napi_value callback = nullptr;
+    napi_get_reference_value(callBackContext->env, callBackContext->callbackRef, &callback);
+
+    napi_value argv[1] = {nullptr};
+    napi_create_int32(callBackContext->env, callBackContext->errorAvcodecCode, &argv[0]);
+
+    napi_call_function(callBackContext->env, nullptr, callback, 1, argv, nullptr);
+
+    LOGD("HmPlayer codecErrorCallback is execute...%{public}d", callBackContext->errorAvcodecCode);
+    if (callBackContext && isRelease) {
+        napi_delete_reference(callBackContext->env, callBackContext->callbackRef);
+        delete callBackContext;
+        callBackContext = nullptr;
+    }
+}
+
+napi_value HmPlayer::onCodecError(napi_env env, napi_callback_info info) {
+    size_t argc = 1;
+    napi_value js_callback;
+    napi_status status = napi_get_cb_info(env, info, &argc, &js_callback, nullptr, nullptr);
+    if (status != napi_ok) {
+        LOGE("HmPlayer onCodecError get params failed");
+        return nullptr;
+    }
+
+    napi_valuetype valueType = napi_undefined;
+    napi_typeof(env, js_callback, &valueType);
+    if (valueType != napi_valuetype::napi_function) {
+        LOGE("HmPlayer js_callback failed");
+        return nullptr;
+    }
+
+    napi_value workName;
+    napi_create_string_utf8(env, "onCodecError", NAPI_AUTO_LENGTH, &workName);
+    napi_create_threadsafe_function(env, nullptr, nullptr, workName, 0, 1, nullptr, nullptr, nullptr,
+                                    codecErrorCallback, &sampleInfo.avcodecErrorFn);
+
+    auto callBackContext = new CallBackContext();
+    sampleInfo.avcodecErrorCallbackData = callBackContext;
+
+    callBackContext->env = env;
+    napi_create_reference(env, js_callback, 1, &callBackContext->callbackRef);
+    MediaPlayManager::GetInstance().setCodecError(sampleInfo);
+    return nullptr;
+}
+
 EXTERN_C_START
 static napi_value Init(napi_env env, napi_value exports) {
     napi_property_descriptor classProp[] = {
@@ -362,7 +531,10 @@ static napi_value Init(napi_env env, napi_value exports) {
         {"onTimeUpdate", nullptr, HmPlayer::onTimeUpdate, nullptr, nullptr, nullptr, napi_default, nullptr},
         {"onStateChange", nullptr, HmPlayer::onStateChange, nullptr, nullptr, nullptr, napi_default, nullptr},
         {"onAudioInterrupt", nullptr, HmPlayer::onAudioInterrupt, nullptr, nullptr, nullptr, napi_default, nullptr},
+        {"onAudioError", nullptr, HmPlayer::onAudioError, nullptr, nullptr, nullptr, napi_default, nullptr},
         {"onOutputDeviceChange", nullptr, HmPlayer::onOutputDeviceChange, nullptr, nullptr, nullptr, napi_default, nullptr},
+        {"onCodecError", nullptr, HmPlayer::onCodecError, nullptr, nullptr, nullptr, napi_default, nullptr},
+        {"onCodecFormatChange", nullptr, HmPlayer::onCodecFormatChange, nullptr, nullptr, nullptr, napi_default, nullptr},
         {"ratePlay", nullptr, HmPlayer::ratePlay, nullptr, nullptr, nullptr, napi_default, nullptr},
     };
 
