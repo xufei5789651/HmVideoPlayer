@@ -1,4 +1,8 @@
 import player from 'libhmvideoplayer.so';
+import { common, wantAgent } from '@kit.AbilityKit';
+import { BackgroundPlayManager } from './BackgroundPlayManager';
+
+const TAG: string = 'HmVideoPlayer';
 
 export class HmVideoPlayer {
   /**
@@ -133,5 +137,31 @@ export class HmVideoPlayer {
    */
   static ratePlay(speed: number) {
     player.ratePlay(speed);
+  }
+
+  /**
+   * 设置是否开启后台长时播放
+   * @param context
+   * @param agentInfo
+   * @param backgroundPlay
+   */
+  static setBackgroundPlayEnable(context: common.BaseContext, agentInfo: wantAgent.WantAgentInfo,
+    backgroundPlay: boolean) {
+    if (!context) {
+      console.error(TAG, "The context is null.")
+      return
+    }
+    if (!agentInfo) {
+      console.error(TAG, "The agent is null, you should call {@Link bindAvSession} first.")
+      return
+    }
+
+    if (backgroundPlay) {
+      console.log(TAG, "start background play")
+      BackgroundPlayManager.startBackground(context, agentInfo)
+    } else {
+      console.log(TAG, "stop background play")
+      BackgroundPlayManager.stopBackground(context)
+    }
   }
 }
