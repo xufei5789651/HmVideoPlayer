@@ -150,11 +150,11 @@ void HmPlayer::onTimeUpdateCallJS(napi_env env, napi_value js_callBack, void *co
     napi_value argv;
     napi_create_int32(env, argContext->timestamp, &argv);
     napi_call_function(env, nullptr, js_callBack, 1, &argv, nullptr);
-    if (argContext && isRelease) {
-        napi_delete_reference(env, argContext->callbackRef);
-        delete argContext;
-        argContext = nullptr;
-    }
+//    if (argContext && isRelease) {
+//        napi_delete_reference(env, argContext->callbackRef);
+//        delete argContext;
+//        argContext = nullptr;
+//    }
 }
 
 napi_value HmPlayer::onTimeUpdate(napi_env env, napi_callback_info info) {
@@ -201,11 +201,11 @@ void stateChangeCallback(napi_env env, napi_value js_callBack, void *context, vo
     napi_call_function(callBackContext->env, nullptr, callback, 1, &argv, nullptr);
 
     LOGD("HmPlayer stateChangeCallback is execute...%{public}ld", callBackContext->state);
-    if (callBackContext && isRelease) {
-        napi_delete_reference(callBackContext->env, callBackContext->callbackRef);
-        delete callBackContext;
-        callBackContext = nullptr;
-    }
+//    if (callBackContext && isRelease) {
+//        napi_delete_reference(callBackContext->env, callBackContext->callbackRef);
+//        delete callBackContext;
+//        callBackContext = nullptr;
+//    }
 }
 
 napi_value HmPlayer::onStateChange(napi_env env, napi_callback_info info) {

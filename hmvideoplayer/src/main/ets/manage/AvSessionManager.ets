@@ -107,7 +107,7 @@ export class AvSessionManager {
         avState = avSession.PlaybackState.PLAYBACK_STATE_ERROR;
         break
     }
-    const result: avSession.AVPlaybackState = {
+    let result: avSession.AVPlaybackState = {
       state: avState,
       position: {
         elapsedTime: this.currentTimestamp,
@@ -134,30 +134,40 @@ export class AvSessionManager {
     if (this.avSession) {
       // 播放
       this.avSession.on('play', () => {
-        HmVideoPlayer.play()
+        this.callbacks.forEach((callback) => {
+          callback.play()
+        })
       })
 
       // 暂停
       this.avSession.on('pause', () => {
-        HmVideoPlayer.pause()
+        this.callbacks.forEach((callback) => {
+          callback.pause()
+        })
       })
 
       // 跳转至指定进度
       this.avSession.on('seek', (time) => {
-        HmVideoPlayer.seek(BigInt(time))
+        this.callbacks.forEach((callback) => {
+          callback.seek(time)
+        })
       })
 
       // 快进
       this.avSession.on('fastForward', (time) => {
         if (time) {
-          HmVideoPlayer.seek(BigInt(this.currentTimestamp + time))
+          this.callbacks.forEach((callback) => {
+            callback.fastForward(time)
+          })
         }
       })
 
       // 快退
       this.avSession.on('rewind', (time) => {
         if (time) {
-          HmVideoPlayer.seek(BigInt(this.currentTimestamp - time))
+          this.callbacks.forEach((callback) => {
+            callback.rewind(time)
+          })
         }
       })
 

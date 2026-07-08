@@ -8,7 +8,7 @@ const WIDTH_PX: number = 1920;
 const HEIGHT_PX: number = 1080;
 const SECOND_TO_MS: number = 1000;
 
-const TAG:string='MainPage';
+const TAG: string = 'MainPage';
 
 @Entry
 @ComponentV2
@@ -17,15 +17,15 @@ struct MainPage {
   display = display.getDefaultDisplaySync();
   xComponentController: XComponentController = new XComponentController();
   heightPx = (this.display.width * HEIGHT_PX / WIDTH_PX) + 'px';
-  context=this.getUIContext().getHostContext() as common.UIAbilityContext;
-  URL: string = 'https://consumer.huawei.com/content/dam/huawei-cbg-site/cn/mkt/pdp/phones/ah-pro-plus/video/kv-intro-pop.mp4';
+  context = this.getUIContext().getHostContext() as common.UIAbilityContext;
+  URL: string =
+    'https://consumer.huawei.com/content/dam/huawei-cbg-site/cn/mkt/pdp/phones/ah-pro-plus/video/kv-intro-pop.mp4';
   @Local isPlay: boolean = false;
   @Local duration: number = 0;
   @Local totalTimeStr: string = '00:00';
   @Local currentTimestamp: number = 0;
   @Local currentTimestampStr: string = '00:00';
-
-  wantAgentInfo:wantAgent.WantAgentInfo={
+  wantAgentInfo: wantAgent.WantAgentInfo = {
     wants: [{
       bundleName: this.context.abilityInfo.bundleName,
       abilityName: this.context.abilityInfo.name
@@ -34,13 +34,27 @@ struct MainPage {
     actionType: wantAgent.OperationType.START_ABILITIES,
     wantAgentFlags: [wantAgent.WantAgentFlags.UPDATE_PRESENT_FLAG]
   }
-
-  avSessionCallback:AvSessionCallback={
+  avSessionCallback: AvSessionCallback = {
     onNext: () => {
       // todo 下一个视频
     },
     onPrevious: () => {
       // todo 上一个视频
+    },
+    play: (): void => {
+      HmVideoPlayer.resume()
+    },
+    pause: (): void => {
+      HmVideoPlayer.pause()
+    },
+    seek: (time: number): void => {
+      HmVideoPlayer.seek(BigInt(time))
+    },
+    fastForward: (time: number): void => {
+      HmVideoPlayer.seek(BigInt(this.currentTimestamp + time))
+    },
+    rewind: (time: number): void => {
+      HmVideoPlayer.seek(BigInt(this.currentTimestamp - time))
     }
   };
 
@@ -49,14 +63,14 @@ struct MainPage {
     this.setVideoPlayerCallback();
   }
 
-  setAvSession(){
+  setAvSession() {
     // 设置avSession 相关方法
-    this.avSessionManager=new AvSessionManager();
-    let info:MediaInfo=new MediaInfo('wild fold','https://so1.360tres.com/dr/220__/t011e1ce4509d68021b.jpg');
+    this.avSessionManager = new AvSessionManager();
+    let info: MediaInfo = new MediaInfo('wild fold', 'https://so1.360tres.com/dr/220__/t011e1ce4509d68021b.jpg');
     this.avSessionManager.setMediaSource(info);
 
-    this.avSessionManager.bindAvSession(this.context,'HmVideo','video',this.wantAgentInfo).then(()=>{
-      HmVideoPlayer.setBackgroundPlayEnable(this.context,this.wantAgentInfo,true)
+    this.avSessionManager.bindAvSession(this.context, 'HmVideo', 'video', this.wantAgentInfo).then(() => {
+      HmVideoPlayer.setBackgroundPlayEnable(this.context, this.wantAgentInfo, true)
     });
 
     this.avSessionManager.addAvSessionCallback(this.avSessionCallback);
@@ -88,8 +102,9 @@ struct MainPage {
           this.isPlay = false;
           break;
       }
-
-      this.avSessionManager?.setAvSessionPlaybackState(state);
+      if (this.avSessionManager) {
+        this.avSessionManager.setAvSessionPlaybackState(state);
+      }
     });
 
     // 注册音频焦点变化监听
@@ -114,7 +129,7 @@ struct MainPage {
 
     // 注册音频错误监听
     HmVideoPlayer.onAudioError((errorAudioCode: number) => {
-      console.log(TAG,`errorAudioCode:${errorAudioCode}`);
+      console.log(TAG, `errorAudioCode:${errorAudioCode}`);
     });
 
     // 注册输出设备变化监听
@@ -128,13 +143,13 @@ struct MainPage {
 
     // 注册音视频编解码运行错误监听
     HmVideoPlayer.onCodecError((errorAvcodecCode: number) => {
-      console.log(TAG,`errorAvcodecCode:${errorAvcodecCode}`);
+      console.log(TAG, `errorAvcodecCode:${errorAvcodecCode}`);
     });
 
     // 注册码流信息变化，如：声道变化等
     HmVideoPlayer.onCodecFormatChange((videoWidth: number, videoHeight: number, audioSampleFormat: number,
       audioChannelCount: number, audioSampleRate: number, videoFrameRate: number) => {
-      console.log(TAG,`videoWidth:${videoWidth},videoHeight:${videoHeight},audioSampleFormat:${audioSampleFormat},
+      console.log(TAG, `videoWidth:${videoWidth},videoHeight:${videoHeight},audioSampleFormat:${audioSampleFormat},
       videoFrameRate:${videoFrameRate},audioChannelCount:${audioChannelCount},audioSampleRate:${audioSampleRate}`);
     });
   }
@@ -148,13 +163,15 @@ struct MainPage {
     HmVideoPlayer.onTimeUpdate((timestamp: number) => {
       this.currentTimestamp = Math.floor(timestamp / SECOND_TO_MS);
       this.currentTimestampStr = secondToTime(Math.floor(timestamp / SECOND_TO_MS));
-      this.avSessionManager?.setAvSessionSeekChanged(timestamp);
+      if (this.avSessionManager) {
+        this.avSessionManager.setAvSessionSeekChanged(timestamp);
+      }
     });
   }
 
   onPageHide(): void {
     HmVideoPlayer.stop();
-    HmVideoPlayer.setBackgroundPlayEnable(this.context,this.wantAgentInfo,false);
+    HmVideoPlayer.setBackgroundPlayEnable(this.context, this.wantAgentInfo, false);
     HmVideoPlayer.release();
     // avSession 相关方法
     if (this.avSessionManager) {
@@ -173,7 +190,7 @@ struct MainPage {
           controller: this.xComponentController
         })
           .onLoad(() => {
-            console.log(TAG,'--->onLoad');
+            console.log(TAG, '--->onLoad');
             this.xComponentController.setXComponentSurfaceRect({ surfaceWidth: WIDTH_PX, surfaceHeight: HEIGHT_PX });
             HmVideoPlayer.initWithURL(this.URL);
           })
