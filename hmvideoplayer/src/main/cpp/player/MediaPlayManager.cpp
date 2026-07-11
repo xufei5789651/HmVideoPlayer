@@ -24,9 +24,7 @@ constexpr int32_t BYTES_PER_SAMPLE_2 = 2;                          // 2 bytes pe
 using namespace std::chrono_literals;
 } // namespace
 
-MediaPlayManager::~MediaPlayManager() {
-    MediaPlayManager::Release(); 
-}
+MediaPlayManager::~MediaPlayManager() { MediaPlayManager::Release(); }
 
 int32_t MediaPlayManager::CreateAudioDecoder() {
     LOGW("audio mime:%{public}s", sampleInfo.audioCodecMime.c_str());
@@ -53,18 +51,20 @@ int32_t MediaPlayManager::CreateAudioDecoder() {
         OH_AudioStreamBuilder_SetEncodingType(builder, AUDIOSTREAM_ENCODING_TYPE_RAW);
         // 设置音频流的工作场景
         OH_AudioStreamBuilder_SetRendererInfo(builder, AUDIOSTREAM_USAGE_MUSIC);
-        LOGW("Init audioSampleRate: %{public}d, ChannelCount: %{public}d", sampleInfo.audioSampleRate,sampleInfo.audioChannelCount);
+        LOGW("Init audioSampleRate: %{public}d, ChannelCount: %{public}d", sampleInfo.audioSampleRate,
+             sampleInfo.audioChannelCount);
         OH_AudioRenderer_Callbacks callbacks;
-         // 设置音频回调函数
+        // 设置音频回调函数
         callbacks.OH_AudioRenderer_OnWriteData = nullptr;
         callbacks.OH_AudioRenderer_OnStreamEvent = nullptr;
-        
-        OH_AudioRenderer_OnWriteDataCallback writeDataCb=OHAudioRenderCallback::OnWriteDataCallback;
+
+        OH_AudioRenderer_OnWriteDataCallback writeDataCb = OHAudioRenderCallback::OnWriteDataCallback;
         OH_AudioStreamBuilder_SetRendererWriteDataCallback(builder, writeDataCb, audioDecContext);
-        
-        OH_AudioRenderer_OutputDeviceChangeCallback outputDeviceChangeCb=OHAudioRenderCallback::OnOutputDeviceChangeCallback;
+
+        OH_AudioRenderer_OutputDeviceChangeCallback outputDeviceChangeCb =
+            OHAudioRenderCallback::OnOutputDeviceChangeCallback;
         OH_AudioStreamBuilder_SetRendererOutputDeviceChangeCallback(builder, outputDeviceChangeCb, audioDecContext);
-        
+
         if (OH_GetDistributionOSApiVersion() >= MIN_API_VERSION_6_0_0) {
             // api 20 起始
             OH_AudioRenderer_OnInterruptCallback interruptCb = OHAudioRenderCallback::OnInterruptCallback;
@@ -75,10 +75,10 @@ int32_t MediaPlayManager::CreateAudioDecoder() {
         } else {
             callbacks.OH_AudioRenderer_OnInterruptEvent = OHAudioRenderCallback::OnRenderInterruptEvent;
             callbacks.OH_AudioRenderer_OnError = OHAudioRenderCallback::OnRenderError;
-            
+
             OH_AudioStreamBuilder_SetRendererCallback(builder, callbacks, audioDecContext);
         }
-                
+
         // 构造播放音频流
         OH_AudioStreamBuilder_GenerateRenderer(builder, &audioRenderer);
     }
@@ -105,7 +105,7 @@ int32_t MediaPlayManager::CreateVideoDecoder() {
 int32_t MediaPlayManager::Init(SampleInfo &info) {
     // 互斥量:mutex
     std::lock_guard<std::mutex> lock(mutex);
-     if (isStarted) {
+    if (isStarted) {
         LOGE("MediaPlayManager Already started.");
         return RESULT_CODE_ERROR;
     }
@@ -121,13 +121,13 @@ int32_t MediaPlayManager::Init(SampleInfo &info) {
     demuxer = std::make_unique<Demuxer>();
     // 解封器初始化:解析音视频配置信息
     int32_t ret = demuxer->Create(sampleInfo);
-     if (ret != RESULT_CODE_OK) {
+    if (ret != RESULT_CODE_OK) {
         LOGE("MediaPlayManager Create demuxer failed");
         return RESULT_CODE_ERROR;
     }
     // 初始化音频解码器：为解码作准备
     ret = CreateAudioDecoder();
-     if (ret != RESULT_CODE_OK) {
+    if (ret != RESULT_CODE_OK) {
         LOGE("MediaPlayManager Create audio decoder failed");
         return RESULT_CODE_ERROR;
     }
@@ -137,29 +137,30 @@ int32_t MediaPlayManager::Init(SampleInfo &info) {
         LOGE("MediaPlayManager Create video decoder failed");
         return RESULT_CODE_ERROR;
     }
-    
+
     if (this->sampleInfo.stateCallbackData != nullptr && !isReleased) {
         LOGD("MediaPlayManager Init() PREPARED_STATE");
         CallBackContext *stateCallBackContext = reinterpret_cast<CallBackContext *>(this->sampleInfo.stateCallbackData);
         stateCallBackContext->state = PREPARED_STATE;
-        
+
         napi_status result = napi_acquire_threadsafe_function(this->sampleInfo.stateChangeFn);
         if (result != napi_ok) {
             LOGE("MediaPlayManager Init napi_acquire_threadsafe_function failed");
             return RESULT_CODE_ERROR;
         }
-        
-        result = napi_call_threadsafe_function(this->sampleInfo.stateChangeFn, stateCallBackContext, napi_tsfn_blocking);
+
+        result =
+            napi_call_threadsafe_function(this->sampleInfo.stateChangeFn, stateCallBackContext, napi_tsfn_blocking);
         if (result != napi_ok) {
             LOGE("MediaPlayManager Init napi_call_threadsafe_function failed");
             return RESULT_CODE_ERROR;
         }
     }
-    
+
     if (audioDecContext != nullptr) {
         audioDecContext->sampleInfo = &sampleInfo;
     }
-    
+
     if (videoDecContext != nullptr) {
         videoDecContext->sampleInfo = &sampleInfo;
     }
@@ -173,7 +174,7 @@ int32_t MediaPlayManager::Start() {
     // 互斥量:mutex
     std::lock_guard<std::mutex> lock(mutex);
     int32_t ret;
-    
+
     if (isStarted) {
         LOGE("MediaPlayManager Start() Already started.");
         return RESULT_CODE_ERROR;
@@ -184,7 +185,7 @@ int32_t MediaPlayManager::Start() {
     }
     // 视频解码
     if (videoDecContext) {
-        ret = videoDecoder->Start();// 视频解码开始
+        ret = videoDecoder->Start(); // 视频解码开始
         if (ret != RESULT_CODE_OK) {
             LOGE("MediaPlayManager Start() Video Decoder start failed");
             return RESULT_CODE_ERROR;
@@ -199,7 +200,7 @@ int32_t MediaPlayManager::Start() {
             return RESULT_CODE_ERROR;
         }
     }
-    
+
     // 音频解码
     if (audioDecContext) {
         ret = audioDecoder->Start(); // 音频解码开始
@@ -224,7 +225,7 @@ int32_t MediaPlayManager::Start() {
             OH_AudioRenderer_Start(audioRenderer);
         }
     }
-    
+
     if (this->sampleInfo.stateCallbackData != nullptr && !isReleased) {
         LOGD("MediaPlayManager Start() PLAYING_STATE");
         CallBackContext *stateCallBackContext = reinterpret_cast<CallBackContext *>(this->sampleInfo.stateCallbackData);
@@ -236,13 +237,14 @@ int32_t MediaPlayManager::Start() {
             return RESULT_CODE_ERROR;
         }
 
-        result = napi_call_threadsafe_function(this->sampleInfo.stateChangeFn, stateCallBackContext, napi_tsfn_nonblocking);
+        result =
+            napi_call_threadsafe_function(this->sampleInfo.stateChangeFn, stateCallBackContext, napi_tsfn_nonblocking);
         if (result != napi_ok) {
             LOGE("MediaPlayManager start napi_call_threadsafe_function failed");
             return RESULT_CODE_ERROR;
         }
     }
-    
+
     LOGI("MediaPlayManager Start() Succeed");
     return RESULT_CODE_OK;
 }
@@ -264,7 +266,8 @@ int32_t MediaPlayManager::Pause() {
             return RESULT_CODE_ERROR;
         }
 
-        result = napi_call_threadsafe_function(this->sampleInfo.stateChangeFn, stateCallBackContext, napi_tsfn_nonblocking);
+        result =
+            napi_call_threadsafe_function(this->sampleInfo.stateChangeFn, stateCallBackContext, napi_tsfn_nonblocking);
         if (result != napi_ok) {
             LOGE("MediaPlayManager pause napi_call_threadsafe_function failed");
             return RESULT_CODE_ERROR;
@@ -275,13 +278,17 @@ int32_t MediaPlayManager::Pause() {
 
 int32_t MediaPlayManager::Resume() {
     isPause.store(false);
+
+    if (!videoDecContext || !audioDecContext) {
+        return RESULT_CODE_ERROR;
+    }
     videoDecContext->inputCond.notify_all();
     videoDecContext->outputCond.notify_all();
 
     audioDecContext->inputCond.notify_all();
     audioDecContext->outputCond.notify_all();
 
-    if (audioRenderer) { 
+    if (audioRenderer) {
         // 【OHAudio 重要步骤】开始输出音频数据
         OH_AudioRenderer_Start(audioRenderer);
     }
@@ -296,7 +303,8 @@ int32_t MediaPlayManager::Resume() {
             return RESULT_CODE_ERROR;
         }
 
-        result = napi_call_threadsafe_function(this->sampleInfo.stateChangeFn, stateCallBackContext, napi_tsfn_nonblocking);
+        result =
+            napi_call_threadsafe_function(this->sampleInfo.stateChangeFn, stateCallBackContext, napi_tsfn_nonblocking);
         if (result != napi_ok) {
             LOGE("start napi_call_threadsafe_function failed");
             return RESULT_CODE_ERROR;
@@ -330,7 +338,8 @@ int32_t MediaPlayManager::Stop() {
             return RESULT_CODE_ERROR;
         }
 
-        result = napi_call_threadsafe_function(this->sampleInfo.stateChangeFn, stateCallBackContext, napi_tsfn_nonblocking);
+        result =
+            napi_call_threadsafe_function(this->sampleInfo.stateChangeFn, stateCallBackContext, napi_tsfn_nonblocking);
         if (result != napi_ok) {
             LOGE("stop napi_call_threadsafe_function failed");
             return RESULT_CODE_ERROR;
@@ -339,14 +348,14 @@ int32_t MediaPlayManager::Stop() {
     return AVCODEC_SAMPLE_ERR_OK;
 }
 
-int64_t MediaPlayManager::GetDuration(){
+int64_t MediaPlayManager::GetDuration() {
     if (demuxer) {
         return demuxer->GetDuration();
     }
     return RESULT_CODE_ERROR;
 }
 
-int32_t MediaPlayManager::Seek(int64_t position){
+int32_t MediaPlayManager::Seek(int64_t position) {
     if (demuxer) {
         return demuxer->Seek(position);
     }
@@ -466,18 +475,19 @@ void MediaPlayManager::Release() {
     if (this->sampleInfo.stateCallbackData != nullptr) {
         CallBackContext *stateCallBackContext = reinterpret_cast<CallBackContext *>(this->sampleInfo.stateCallbackData);
         stateCallBackContext->state = RELEASE_STATE;
-        
+
         napi_status result = napi_acquire_threadsafe_function(this->sampleInfo.stateChangeFn);
         if (result != napi_ok) {
             LOGE("release napi_acquire_threadsafe_function failed");
         }
-        
-        result = napi_call_threadsafe_function(this->sampleInfo.stateChangeFn, stateCallBackContext, napi_tsfn_nonblocking);
+
+        result =
+            napi_call_threadsafe_function(this->sampleInfo.stateChangeFn, stateCallBackContext, napi_tsfn_nonblocking);
         if (result != napi_ok) {
             LOGE("release napi_call_threadsafe_function failed");
         }
     }
-    
+
     AVCODEC_SAMPLE_LOGI("Succeed");
 }
 
@@ -485,7 +495,7 @@ void MediaPlayManager::VideoDecInputThread() {
     while (true) {
         CHECK_AND_BREAK_LOG(isStarted, "Decoder input thread out");
         std::unique_lock<std::mutex> lock(videoDecContext->inputMutex);
-        
+
         videoDecContext->inputCond.wait(lock, [this]() {
             return !isPause.load() && (!isStarted || !videoDecContext->inputBufferInfoQueue.empty());
         });
@@ -617,7 +627,7 @@ void MediaPlayManager::AudioDecInputThread() {
     while (true) {
         CHECK_AND_BREAK_LOG(isStarted, "Decoder input thread out");
         std::unique_lock<std::mutex> lock(audioDecContext->inputMutex);
-        
+
         audioDecContext->inputCond.wait(lock, [this]() {
             return !isPause.load() && (!isStarted || !audioDecContext->inputBufferInfoQueue.empty());
         });
@@ -634,17 +644,18 @@ void MediaPlayManager::AudioDecInputThread() {
 
         // 当前进度
         if (this->sampleInfo.callbackData != nullptr && !isReleased && bufferInfo.attr.pts != 0) {
-            
+
             CallBackContext *callBackContext = reinterpret_cast<CallBackContext *>(this->sampleInfo.callbackData);
             callBackContext->timestamp = bufferInfo.attr.pts / 1000;
-            
+
             napi_status result = napi_acquire_threadsafe_function(this->sampleInfo.timestampFn);
             if (result != napi_ok) {
                 LOGE("MediaPlayManager napi_acquire_threadsafe_function failed");
                 break;
             }
-            
-            result =napi_call_threadsafe_function(this->sampleInfo.timestampFn, callBackContext, napi_tsfn_nonblocking);
+
+            result =
+                napi_call_threadsafe_function(this->sampleInfo.timestampFn, callBackContext, napi_tsfn_nonblocking);
             if (result != napi_ok) {
                 LOGE("MediaPlayManager napi_call_threadsafe_function failed");
                 break;
@@ -654,25 +665,26 @@ void MediaPlayManager::AudioDecInputThread() {
         int32_t ret = audioDecoder->PushInputBuffer(bufferInfo);
         CHECK_AND_BREAK_LOG(ret == AVCODEC_SAMPLE_ERR_OK, "Push data failed, thread out");
 
-        if ((bufferInfo.attr.flags & AVCODEC_BUFFER_FLAGS_EOS) 
-            && this->sampleInfo.stateCallbackData != nullptr && !isReleased) {
-            CallBackContext *stateCallBackContext =reinterpret_cast<CallBackContext *>(this->sampleInfo.stateCallbackData);
+        if ((bufferInfo.attr.flags & AVCODEC_BUFFER_FLAGS_EOS) && this->sampleInfo.stateCallbackData != nullptr &&
+            !isReleased) {
+            CallBackContext *stateCallBackContext =
+                reinterpret_cast<CallBackContext *>(this->sampleInfo.stateCallbackData);
             stateCallBackContext->state = COMPLETED_STATE;
-            
+
             napi_status result = napi_acquire_threadsafe_function(this->sampleInfo.stateChangeFn);
             if (result != napi_ok) {
                 LOGE("MediaPlayManager napi_acquire_threadsafe_function failed");
                 break;
             }
-            
-            result = napi_call_threadsafe_function(this->sampleInfo.stateChangeFn, stateCallBackContext,napi_tsfn_nonblocking);
+
+            result = napi_call_threadsafe_function(this->sampleInfo.stateChangeFn, stateCallBackContext,
+                                                   napi_tsfn_nonblocking);
             if (result != napi_ok) {
                 LOGE("MediaPlayManager napi_call_threadsafe_function failed");
                 break;
             }
             LOGE("MediaPlayManager Catch EOS, thread out");
         }
-        
     }
 }
 
@@ -680,7 +692,7 @@ void MediaPlayManager::AudioDecOutputThread() {
     while (true) {
         CHECK_AND_BREAK_LOG(isStarted, "Decoder output thread out");
         std::unique_lock<std::mutex> lock(audioDecContext->outputMutex);
-        
+
         audioDecContext->outputCond.wait(lock, [this]() {
             return !isPause.load() && (!isStarted || !audioDecContext->outputBufferInfoQueue.empty());
         });

@@ -34,6 +34,7 @@ struct MainPage {
     actionType: wantAgent.OperationType.START_ABILITIES,
     wantAgentFlags: [wantAgent.WantAgentFlags.UPDATE_PRESENT_FLAG]
   }
+  // 播控中心相关方法
   avSessionCallback: AvSessionCallback = {
     onNext: () => {
       // todo 下一个视频
@@ -103,7 +104,7 @@ struct MainPage {
           break;
       }
       if (this.avSessionManager) {
-        this.avSessionManager.setAvSessionPlaybackState(this.currentTimestamp, state);
+        this.avSessionManager.setAvSessionPlaybackState(this.currentTimestamp* SECOND_TO_MS, state);
       }
     });
 
@@ -187,7 +188,6 @@ struct MainPage {
           controller: this.xComponentController
         })
           .onLoad(() => {
-            console.log(TAG, '--->onLoad');
             this.xComponentController.setXComponentSurfaceRect({ surfaceWidth: WIDTH_PX, surfaceHeight: HEIGHT_PX });
             HmVideoPlayer.initWithURL(this.URL);
           })
