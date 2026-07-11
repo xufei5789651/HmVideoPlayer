@@ -103,7 +103,7 @@ struct MainPage {
           break;
       }
       if (this.avSessionManager) {
-        this.avSessionManager.setAvSessionPlaybackState(state);
+        this.avSessionManager.setAvSessionPlaybackState(this.currentTimestamp, state);
       }
     });
 
@@ -163,9 +163,6 @@ struct MainPage {
     HmVideoPlayer.onTimeUpdate((timestamp: number) => {
       this.currentTimestamp = Math.floor(timestamp / SECOND_TO_MS);
       this.currentTimestampStr = secondToTime(Math.floor(timestamp / SECOND_TO_MS));
-      if (this.avSessionManager) {
-        this.avSessionManager.setAvSessionSeekChanged(timestamp);
-      }
     });
   }
 
@@ -229,6 +226,9 @@ struct MainPage {
               if (mode === SliderChangeMode.Begin || mode === SliderChangeMode.End) {
                 this.currentTimestamp = value;
                 HmVideoPlayer.seek(BigInt(value * SECOND_TO_MS));
+                if (this.avSessionManager) {
+                  this.avSessionManager.setAvSessionSeekChanged(this.currentTimestamp * SECOND_TO_MS);
+                }
               }
             })
 

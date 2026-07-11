@@ -15,7 +15,8 @@ export class AvSessionManager {
   private currentTimestamp: number = 0;
   private callbacks: Set<AvSessionCallback> = new Set();
 
-  setAvSessionPlaybackState(state: number){
+  setAvSessionPlaybackState(currentTimestamp: number,state: number){
+    this.currentTimestamp = currentTimestamp;
     if (this.avSession) {
       let avPlaybackState = this.setPlaybackState(state)
       this.avSession.setAVPlaybackState(avPlaybackState)
@@ -23,13 +24,13 @@ export class AvSessionManager {
   }
 
 
-  setAvSessionSeekChanged(position: number){
-    this.currentTimestamp = position;
+  setAvSessionSeekChanged(currentTimestamp: number){
+    this.currentTimestamp = currentTimestamp;
     if (this.avSession) {
       this.avSession.setAVPlaybackState({
         state: avSession.PlaybackState.PLAYBACK_STATE_PLAY,
         position: {
-          elapsedTime: position,
+          elapsedTime: currentTimestamp,
           updateTime: new Date().getTime()
         },
         duration: HmVideoPlayer.getDuration()
