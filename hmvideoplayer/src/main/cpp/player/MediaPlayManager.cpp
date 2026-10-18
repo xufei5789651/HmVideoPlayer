@@ -140,17 +140,9 @@ int32_t MediaPlayManager::Init(SampleInfo &info) {
 
     if (this->sampleInfo.stateCallbackData != nullptr && !isReleased) {
         LOGD("MediaPlayManager Init() PREPARED_STATE");
-        CallBackContext *stateCallBackContext = reinterpret_cast<CallBackContext *>(this->sampleInfo.stateCallbackData);
-        stateCallBackContext->state = PREPARED_STATE;
-
-        napi_status result = napi_acquire_threadsafe_function(this->sampleInfo.stateChangeFn);
-        if (result != napi_ok) {
-            LOGE("MediaPlayManager Init napi_acquire_threadsafe_function failed");
-            return RESULT_CODE_ERROR;
-        }
-
-        result =
-            napi_call_threadsafe_function(this->sampleInfo.stateChangeFn, stateCallBackContext, napi_tsfn_blocking);
+        napi_status result = napi_call_threadsafe_function(
+            this->sampleInfo.stateChangeFn, reinterpret_cast<void *>(static_cast<intptr_t>(PREPARED_STATE)),
+            napi_tsfn_blocking);
         if (result != napi_ok) {
             LOGE("MediaPlayManager Init napi_call_threadsafe_function failed");
             return RESULT_CODE_ERROR;
@@ -172,7 +164,7 @@ int32_t MediaPlayManager::Init(SampleInfo &info) {
 
 int32_t MediaPlayManager::Start() {
     // 互斥量:mutex
-    std::lock_guard<std::mutex> lock(mutex);
+    std::unique_lock<std::mutex> lock(mutex);
     int32_t ret;
 
     if (isStarted) {
@@ -196,6 +188,7 @@ int32_t MediaPlayManager::Start() {
 
         if (videoDecInputThread == nullptr || videoDecOutputThread == nullptr) {
             LOGE("MediaPlayManager Start() Create thread failed");
+            lock.unlock();
             Release();
             return RESULT_CODE_ERROR;
         }
@@ -213,6 +206,7 @@ int32_t MediaPlayManager::Start() {
         audioDecOutputThread = std::make_unique<std::thread>(&MediaPlayManager::AudioDecOutputThread, this);
         if (audioDecInputThread == nullptr || audioDecOutputThread == nullptr) {
             LOGE("MediaPlayManager Start() Create thread failed");
+            lock.unlock();
             Release();
             return RESULT_CODE_ERROR;
         }
@@ -228,17 +222,9 @@ int32_t MediaPlayManager::Start() {
 
     if (this->sampleInfo.stateCallbackData != nullptr && !isReleased) {
         LOGD("MediaPlayManager Start() PLAYING_STATE");
-        CallBackContext *stateCallBackContext = reinterpret_cast<CallBackContext *>(this->sampleInfo.stateCallbackData);
-        stateCallBackContext->state = PLAYING_STATE;
-
-        napi_status result = napi_acquire_threadsafe_function(this->sampleInfo.stateChangeFn);
-        if (result != napi_ok) {
-            LOGE("MediaPlayManager start napi_acquire_threadsafe_function failed");
-            return RESULT_CODE_ERROR;
-        }
-
-        result =
-            napi_call_threadsafe_function(this->sampleInfo.stateChangeFn, stateCallBackContext, napi_tsfn_nonblocking);
+        napi_status result = napi_call_threadsafe_function(
+            this->sampleInfo.stateChangeFn, reinterpret_cast<void *>(static_cast<intptr_t>(PLAYING_STATE)),
+            napi_tsfn_nonblocking);
         if (result != napi_ok) {
             LOGE("MediaPlayManager start napi_call_threadsafe_function failed");
             return RESULT_CODE_ERROR;
@@ -257,17 +243,9 @@ int32_t MediaPlayManager::Pause() {
     }
 
     if (this->sampleInfo.stateCallbackData != nullptr && !isReleased) {
-        CallBackContext *stateCallBackContext = reinterpret_cast<CallBackContext *>(this->sampleInfo.stateCallbackData);
-        stateCallBackContext->state = PAUSED_STATE;
-
-        napi_status result = napi_acquire_threadsafe_function(this->sampleInfo.stateChangeFn);
-        if (result != napi_ok) {
-            LOGE("MediaPlayManager pause napi_acquire_threadsafe_function failed");
-            return RESULT_CODE_ERROR;
-        }
-
-        result =
-            napi_call_threadsafe_function(this->sampleInfo.stateChangeFn, stateCallBackContext, napi_tsfn_nonblocking);
+        napi_status result = napi_call_threadsafe_function(
+            this->sampleInfo.stateChangeFn, reinterpret_cast<void *>(static_cast<intptr_t>(PAUSED_STATE)),
+            napi_tsfn_nonblocking);
         if (result != napi_ok) {
             LOGE("MediaPlayManager pause napi_call_threadsafe_function failed");
             return RESULT_CODE_ERROR;
@@ -294,17 +272,9 @@ int32_t MediaPlayManager::Resume() {
     }
 
     if (this->sampleInfo.stateCallbackData != nullptr && !isReleased) {
-        CallBackContext *stateCallBackContext = reinterpret_cast<CallBackContext *>(this->sampleInfo.stateCallbackData);
-        stateCallBackContext->state = PLAYING_STATE;
-
-        napi_status result = napi_acquire_threadsafe_function(this->sampleInfo.stateChangeFn);
-        if (result != napi_ok) {
-            LOGE("start napi_acquire_threadsafe_function failed");
-            return RESULT_CODE_ERROR;
-        }
-
-        result =
-            napi_call_threadsafe_function(this->sampleInfo.stateChangeFn, stateCallBackContext, napi_tsfn_nonblocking);
+        napi_status result = napi_call_threadsafe_function(
+            this->sampleInfo.stateChangeFn, reinterpret_cast<void *>(static_cast<intptr_t>(PLAYING_STATE)),
+            napi_tsfn_nonblocking);
         if (result != napi_ok) {
             LOGE("start napi_call_threadsafe_function failed");
             return RESULT_CODE_ERROR;
@@ -329,17 +299,9 @@ int32_t MediaPlayManager::Stop() {
     }
 
     if (this->sampleInfo.stateCallbackData != nullptr && !isReleased) {
-        CallBackContext *stateCallBackContext = reinterpret_cast<CallBackContext *>(this->sampleInfo.stateCallbackData);
-        stateCallBackContext->state = STOPPED_STATE;
-
-        napi_status result = napi_acquire_threadsafe_function(this->sampleInfo.stateChangeFn);
-        if (result != napi_ok) {
-            LOGE("stop napi_acquire_threadsafe_function failed");
-            return RESULT_CODE_ERROR;
-        }
-
-        result =
-            napi_call_threadsafe_function(this->sampleInfo.stateChangeFn, stateCallBackContext, napi_tsfn_nonblocking);
+        napi_status result = napi_call_threadsafe_function(
+            this->sampleInfo.stateChangeFn, reinterpret_cast<void *>(static_cast<intptr_t>(STOPPED_STATE)),
+            napi_tsfn_nonblocking);
         if (result != napi_ok) {
             LOGE("stop napi_call_threadsafe_function failed");
             return RESULT_CODE_ERROR;
@@ -393,8 +355,8 @@ void MediaPlayManager::setCodecFormatChange(SampleInfo &sampleInfo) {
 }
 
 void MediaPlayManager::setCodecError(SampleInfo &sampleInfo) {
-    this->sampleInfo.audioErrorCallbackData = sampleInfo.audioErrorCallbackData;
-    this->sampleInfo.audioErrorFn = sampleInfo.audioErrorFn;
+    this->sampleInfo.avcodecErrorCallbackData = sampleInfo.avcodecErrorCallbackData;
+    this->sampleInfo.avcodecErrorFn = sampleInfo.avcodecErrorFn;
 }
 
 void MediaPlayManager::SetSpeed(float speed) {
@@ -473,16 +435,9 @@ void MediaPlayManager::Release() {
     }
 
     if (this->sampleInfo.stateCallbackData != nullptr) {
-        CallBackContext *stateCallBackContext = reinterpret_cast<CallBackContext *>(this->sampleInfo.stateCallbackData);
-        stateCallBackContext->state = RELEASE_STATE;
-
-        napi_status result = napi_acquire_threadsafe_function(this->sampleInfo.stateChangeFn);
-        if (result != napi_ok) {
-            LOGE("release napi_acquire_threadsafe_function failed");
-        }
-
-        result =
-            napi_call_threadsafe_function(this->sampleInfo.stateChangeFn, stateCallBackContext, napi_tsfn_nonblocking);
+        napi_status result = napi_call_threadsafe_function(
+            this->sampleInfo.stateChangeFn, reinterpret_cast<void *>(static_cast<intptr_t>(RELEASE_STATE)),
+            napi_tsfn_nonblocking);
         if (result != napi_ok) {
             LOGE("release napi_call_threadsafe_function failed");
         }
@@ -648,13 +603,7 @@ void MediaPlayManager::AudioDecInputThread() {
             CallBackContext *callBackContext = reinterpret_cast<CallBackContext *>(this->sampleInfo.callbackData);
             callBackContext->timestamp = bufferInfo.attr.pts / 1000;
 
-            napi_status result = napi_acquire_threadsafe_function(this->sampleInfo.timestampFn);
-            if (result != napi_ok) {
-                LOGE("MediaPlayManager napi_acquire_threadsafe_function failed");
-                break;
-            }
-
-            result =
+            napi_status result =
                 napi_call_threadsafe_function(this->sampleInfo.timestampFn, callBackContext, napi_tsfn_nonblocking);
             if (result != napi_ok) {
                 LOGE("MediaPlayManager napi_call_threadsafe_function failed");
@@ -665,25 +614,17 @@ void MediaPlayManager::AudioDecInputThread() {
         int32_t ret = audioDecoder->PushInputBuffer(bufferInfo);
         CHECK_AND_BREAK_LOG(ret == AVCODEC_SAMPLE_ERR_OK, "Push data failed, thread out");
 
-        if ((bufferInfo.attr.flags & AVCODEC_BUFFER_FLAGS_EOS) && this->sampleInfo.stateCallbackData != nullptr &&
-            !isReleased) {
-            CallBackContext *stateCallBackContext =
-                reinterpret_cast<CallBackContext *>(this->sampleInfo.stateCallbackData);
-            stateCallBackContext->state = COMPLETED_STATE;
-
-            napi_status result = napi_acquire_threadsafe_function(this->sampleInfo.stateChangeFn);
-            if (result != napi_ok) {
-                LOGE("MediaPlayManager napi_acquire_threadsafe_function failed");
-                break;
+        if (bufferInfo.attr.flags & AVCODEC_BUFFER_FLAGS_EOS) {
+            if (this->sampleInfo.stateCallbackData != nullptr && !isReleased) {
+                napi_status result = napi_call_threadsafe_function(
+                    this->sampleInfo.stateChangeFn,
+                    reinterpret_cast<void *>(static_cast<intptr_t>(COMPLETED_STATE)), napi_tsfn_nonblocking);
+                if (result != napi_ok) {
+                    LOGE("MediaPlayManager napi_call_threadsafe_function failed");
+                }
             }
-
-            result = napi_call_threadsafe_function(this->sampleInfo.stateChangeFn, stateCallBackContext,
-                                                   napi_tsfn_nonblocking);
-            if (result != napi_ok) {
-                LOGE("MediaPlayManager napi_call_threadsafe_function failed");
-                break;
-            }
-            LOGE("MediaPlayManager Catch EOS, thread out");
+            LOGI("MediaPlayManager Catch EOS, audio input thread out");
+            break;
         }
     }
 }

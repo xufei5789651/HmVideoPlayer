@@ -187,25 +187,21 @@ napi_value HmPlayer::onTimeUpdate(napi_env env, napi_callback_info info) {
 }
 
 void stateChangeCallback(napi_env env, napi_value js_callBack, void *context, void *contextData) {
-    CallBackContext *callBackContext = reinterpret_cast<CallBackContext *>(contextData);
+    CallBackContext *callBackContext = static_cast<CallBackContext *>(context);
     if (callBackContext == nullptr) {
-        LOGE("stateChangeCallback function callBackContext nullptr");
+        LOGE("stateChangeCallback function context nullptr");
         return;
     }
+    int32_t state = static_cast<int32_t>(reinterpret_cast<intptr_t>(contextData));
 
     napi_value callback = nullptr;
     napi_get_reference_value(callBackContext->env, callBackContext->callbackRef, &callback);
 
     napi_value argv;
-    napi_create_int32(callBackContext->env, callBackContext->state, &argv);
+    napi_create_int32(callBackContext->env, state, &argv);
     napi_call_function(callBackContext->env, nullptr, callback, 1, &argv, nullptr);
 
-    LOGD("HmPlayer stateChangeCallback is execute...%{public}ld", callBackContext->state);
-//    if (callBackContext && isRelease) {
-//        napi_delete_reference(callBackContext->env, callBackContext->callbackRef);
-//        delete callBackContext;
-//        callBackContext = nullptr;
-//    }
+    LOGD("HmPlayer stateChangeCallback is execute...%{public}d", state);
 }
 
 napi_value HmPlayer::onStateChange(napi_env env, napi_callback_info info) {
@@ -224,16 +220,16 @@ napi_value HmPlayer::onStateChange(napi_env env, napi_callback_info info) {
         return nullptr;
     }
 
-    napi_value workName;
-    napi_create_string_utf8(env, "onStateChange", NAPI_AUTO_LENGTH, &workName);
-    napi_create_threadsafe_function(env, nullptr, nullptr, workName, 0, 1, nullptr, nullptr, nullptr,
-                                    stateChangeCallback, &sampleInfo.stateChangeFn);
-
     auto callBackContext = new CallBackContext();
     sampleInfo.stateCallbackData = callBackContext;
 
     callBackContext->env = env;
     napi_create_reference(env, js_callback, 1, &callBackContext->callbackRef);
+
+    napi_value workName;
+    napi_create_string_utf8(env, "onStateChange", NAPI_AUTO_LENGTH, &workName);
+    napi_create_threadsafe_function(env, nullptr, nullptr, workName, 0, 1, nullptr, nullptr,
+                                    callBackContext, stateChangeCallback, &sampleInfo.stateChangeFn);
 
     MediaPlayManager::GetInstance().setStateChangeCallback(sampleInfo);
     LOGD("HmPlayer onStateChange is execute ...");
@@ -257,11 +253,6 @@ void audioInterruptCallback(napi_env env, napi_value js_callBack, void *context,
     napi_call_function(callBackContext->env, nullptr, callback, 2, argv, nullptr);
 
     LOGD("HmPlayer audioInterruptCallback is execute...%{public}d", callBackContext->forceType);
-    if (callBackContext && isRelease) {
-        napi_delete_reference(callBackContext->env, callBackContext->callbackRef);
-        delete callBackContext;
-        callBackContext = nullptr;
-    }
 }
 
 napi_value HmPlayer::onAudioInterrupt(napi_env env, napi_callback_info info) {
@@ -310,11 +301,6 @@ void audioErrorCallback(napi_env env, napi_value js_callBack, void *context, voi
     napi_call_function(callBackContext->env, nullptr, callback, 1, argv, nullptr);
 
     LOGD("HmPlayer audioErrorCallback is execute...%{public}d", callBackContext->errorAudioCode);
-    if (callBackContext && isRelease) {
-        napi_delete_reference(callBackContext->env, callBackContext->callbackRef);
-        delete callBackContext;
-        callBackContext = nullptr;
-    }
 }
 
 napi_value HmPlayer::onAudioError(napi_env env, napi_callback_info info) {
@@ -336,7 +322,7 @@ napi_value HmPlayer::onAudioError(napi_env env, napi_callback_info info) {
     napi_value workName;
     napi_create_string_utf8(env, "onAudioError", NAPI_AUTO_LENGTH, &workName);
     napi_create_threadsafe_function(env, nullptr, nullptr, workName, 0, 1, nullptr, nullptr, nullptr,
-                                    audioErrorCallback, &sampleInfo.audioInterruptFn);
+                                    audioErrorCallback, &sampleInfo.audioErrorFn);
 
     auto callBackContext = new CallBackContext();
     sampleInfo.audioErrorCallbackData = callBackContext;
@@ -363,11 +349,6 @@ void outputDeviceChangeCallback(napi_env env, napi_value js_callBack, void *cont
     napi_call_function(callBackContext->env, nullptr, callback, 1, argv, nullptr);
 
     LOGD("HmPlayer audioInterruptCallback is execute...%{public}d", callBackContext->routingChange);
-    if (callBackContext && isRelease) {
-        napi_delete_reference(callBackContext->env, callBackContext->callbackRef);
-        delete callBackContext;
-        callBackContext = nullptr;
-    }
 }
 
 napi_value HmPlayer::onOutputDeviceChange(napi_env env, napi_callback_info info) {
@@ -426,11 +407,6 @@ void codecFormatChangeCallback(napi_env env, napi_value js_callBack, void *conte
     LOGD("HmPlayer codecFormatChangeCallback is execute...%{public}d", callBackContext->audioChannelCount);
     LOGD("HmPlayer codecFormatChangeCallback is execute...%{public}d", callBackContext->audioSampleRate);
     LOGD("HmPlayer codecFormatChangeCallback is execute...%{public}f", callBackContext->videoFrameRate);
-    if (callBackContext && isRelease) {
-        napi_delete_reference(callBackContext->env, callBackContext->callbackRef);
-        delete callBackContext;
-        callBackContext = nullptr;
-    }
 }
 
 napi_value HmPlayer::onCodecFormatChange(napi_env env, napi_callback_info info) {
@@ -479,11 +455,6 @@ void codecErrorCallback(napi_env env, napi_value js_callBack, void *context, voi
     napi_call_function(callBackContext->env, nullptr, callback, 1, argv, nullptr);
 
     LOGD("HmPlayer codecErrorCallback is execute...%{public}d", callBackContext->errorAvcodecCode);
-    if (callBackContext && isRelease) {
-        napi_delete_reference(callBackContext->env, callBackContext->callbackRef);
-        delete callBackContext;
-        callBackContext = nullptr;
-    }
 }
 
 napi_value HmPlayer::onCodecError(napi_env env, napi_callback_info info) {

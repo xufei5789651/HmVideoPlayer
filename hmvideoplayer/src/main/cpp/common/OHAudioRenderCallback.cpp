@@ -93,15 +93,10 @@ int32_t OHAudioRenderCallback::OnRenderStreamEvent(OH_AudioRenderer *renderer, v
     
     callback->routingChange=event;
     
-    napi_status result = napi_acquire_threadsafe_function(param->sampleInfo->outputDeviceChangeFn);
+    napi_status result = napi_call_threadsafe_function(param->sampleInfo->outputDeviceChangeFn, callback,
+                                                       napi_tsfn_nonblocking);
     if (result != napi_ok) {
-        LOGE("OHAudioRenderCallback OnRenderStreamEvent start napi_acquire_threadsafe_function failed");
-        return RESULT_CODE_ERROR;
-    }
-
-    result = napi_call_threadsafe_function(param->sampleInfo->outputDeviceChangeFn, callback, napi_tsfn_nonblocking);
-    if (result != napi_ok) {
-        LOGE("OHAudioRenderCallback OnRenderStreamEvent start napi_acquire_threadsafe_function failed");
+        LOGE("OHAudioRenderCallback OnRenderStreamEvent start napi_call_threadsafe_function failed");
         return RESULT_CODE_ERROR;
     }
     return RESULT_CODE_OK;
@@ -130,15 +125,10 @@ void OHAudioRenderCallback::OnOutputDeviceChangeCallback(OH_AudioRenderer *rende
     
     callback->routingChange=reason;
     
-    napi_status result = napi_acquire_threadsafe_function(param->sampleInfo->outputDeviceChangeFn);
+    napi_status result = napi_call_threadsafe_function(param->sampleInfo->outputDeviceChangeFn, callback,
+                                                       napi_tsfn_nonblocking);
     if (result != napi_ok) {
-        LOGE("OHAudioRenderCallback OnRenderStreamEvent start napi_acquire_threadsafe_function failed");
-        return;
-    }
-
-    result = napi_call_threadsafe_function(param->sampleInfo->outputDeviceChangeFn, callback, napi_tsfn_nonblocking);
-    if (result != napi_ok) {
-        LOGE("OHAudioRenderCallback OnRenderStreamEvent start napi_acquire_threadsafe_function failed");
+        LOGE("OHAudioRenderCallback OnRenderStreamEvent start napi_call_threadsafe_function failed");
         return;
     }
     return;
@@ -168,15 +158,9 @@ int32_t OHAudioRenderCallback::OnRenderInterruptEvent(OH_AudioRenderer *renderer
     callback->hint=hint;
     callback->forceType=type;
 
-    napi_status result = napi_acquire_threadsafe_function(param->sampleInfo->audioInterruptFn);
+    napi_status result = napi_call_threadsafe_function(param->sampleInfo->audioInterruptFn, callback, napi_tsfn_nonblocking);
     if (result != napi_ok) {
-        LOGE("OHAudioRenderCallback OnRenderInterruptEvent start napi_acquire_threadsafe_function failed");
-        return RESULT_CODE_ERROR;
-    }
-
-    result = napi_call_threadsafe_function(param->sampleInfo->audioInterruptFn, callback, napi_tsfn_nonblocking);
-    if (result != napi_ok) {
-        LOGE("OHAudioRenderCallback OnRenderInterruptEvent start napi_acquire_threadsafe_function failed");
+        LOGE("OHAudioRenderCallback OnRenderInterruptEvent start napi_call_threadsafe_function failed");
         return RESULT_CODE_ERROR;
     }
     return RESULT_CODE_OK;
@@ -206,15 +190,9 @@ void OHAudioRenderCallback::OnInterruptCallback(OH_AudioRenderer *renderer, void
     callback->hint=hint;
     callback->forceType=type;
 
-    napi_status result = napi_acquire_threadsafe_function(param->sampleInfo->audioInterruptFn);
+    napi_status result = napi_call_threadsafe_function(param->sampleInfo->audioInterruptFn, callback, napi_tsfn_nonblocking);
     if (result != napi_ok) {
-        LOGE("OHAudioRenderCallback OnRenderInterruptEvent start napi_acquire_threadsafe_function failed");
-        return;
-    }
-
-    result = napi_call_threadsafe_function(param->sampleInfo->audioInterruptFn, callback, napi_tsfn_nonblocking);
-    if (result != napi_ok) {
-        LOGE("OHAudioRenderCallback OnRenderInterruptEvent start napi_acquire_threadsafe_function failed");
+        LOGE("OHAudioRenderCallback OnRenderInterruptEvent start napi_call_threadsafe_function failed");
         return;
     }
     return;
@@ -242,15 +220,9 @@ int32_t OHAudioRenderCallback::OnRenderError(OH_AudioRenderer *renderer, void *u
 
     callback->errorAudioCode = error;
     
-    napi_status result = napi_acquire_threadsafe_function(param->sampleInfo->audioErrorFn);
+    napi_status result = napi_call_threadsafe_function(param->sampleInfo->audioErrorFn, callback, napi_tsfn_nonblocking);
     if (result != napi_ok) {
-        LOGE("OHAudioRenderCallback OnRenderError start napi_acquire_threadsafe_function failed");
-        return RESULT_CODE_ERROR;
-    }
-
-    result = napi_call_threadsafe_function(param->sampleInfo->audioErrorFn, callback, napi_tsfn_nonblocking);
-    if (result != napi_ok) {
-        LOGE("OHAudioRenderCallback OnRenderError start napi_acquire_threadsafe_function failed");
+        LOGE("OHAudioRenderCallback OnRenderError start napi_call_threadsafe_function failed");
         return RESULT_CODE_ERROR;
     }
     return RESULT_CODE_OK;
@@ -278,15 +250,9 @@ void OHAudioRenderCallback::OnErrorCallback(OH_AudioRenderer *renderer, void *us
 
     callback->errorAudioCode = error;
     
-    napi_status result = napi_acquire_threadsafe_function(param->sampleInfo->audioErrorFn);
+    napi_status result = napi_call_threadsafe_function(param->sampleInfo->audioErrorFn, callback, napi_tsfn_nonblocking);
     if (result != napi_ok) {
-        LOGE("OHAudioRenderCallback OnRenderError start napi_acquire_threadsafe_function failed");
-        return;
-    }
-
-    result = napi_call_threadsafe_function(param->sampleInfo->audioErrorFn, callback, napi_tsfn_nonblocking);
-    if (result != napi_ok) {
-        LOGE("OHAudioRenderCallback OnRenderError start napi_acquire_threadsafe_function failed");
+        LOGE("OHAudioRenderCallback OnRenderError start napi_call_threadsafe_function failed");
         return;
     }
     return;

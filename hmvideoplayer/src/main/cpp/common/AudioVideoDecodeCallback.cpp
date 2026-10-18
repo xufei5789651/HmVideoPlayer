@@ -25,15 +25,9 @@ void AudioVideoDecodeCallback::OnCodecError(OH_AVCodec *codec, int32_t errorCode
 
     callback->errorAvcodecCode = errorCode;
 
-    napi_status result = napi_acquire_threadsafe_function(param->sampleInfo->avcodecErrorFn);
+    napi_status result = napi_call_threadsafe_function(param->sampleInfo->avcodecErrorFn, callback, napi_tsfn_nonblocking);
     if (result != napi_ok) {
-        LOGE("AudioVideoDecodeCallback OnCodecError start napi_acquire_threadsafe_function failed");
-        return;
-    }
-
-    result = napi_call_threadsafe_function(param->sampleInfo->avcodecErrorFn, callback, napi_tsfn_nonblocking);
-    if (result != napi_ok) {
-        LOGE("AudioVideoDecodeCallback OnCodecError start napi_acquire_threadsafe_function failed");
+        LOGE("AudioVideoDecodeCallback OnCodecError start napi_call_threadsafe_function failed");
         return;
     }
 }
@@ -64,15 +58,9 @@ void AudioVideoDecodeCallback::OnCodecFormatChange(OH_AVCodec *codec, OH_AVForma
     OH_AVFormat_GetIntValue(format, OH_MD_KEY_AUD_SAMPLE_RATE, &callback->audioSampleRate);
     OH_AVFormat_GetDoubleValue(format, OH_MD_KEY_FRAME_RATE, &callback->videoFrameRate);
 
-    napi_status result = napi_acquire_threadsafe_function(param->sampleInfo->avcodecStreamChangeFn);
+    napi_status result = napi_call_threadsafe_function(param->sampleInfo->avcodecStreamChangeFn, callback, napi_tsfn_nonblocking);
     if (result != napi_ok) {
-        LOGE("AudioVideoDecodeCallback OnCodecError start napi_acquire_threadsafe_function failed");
-        return;
-    }
-
-    result = napi_call_threadsafe_function(param->sampleInfo->avcodecStreamChangeFn, callback, napi_tsfn_nonblocking);
-    if (result != napi_ok) {
-        LOGE("AudioVideoDecodeCallback OnCodecError start napi_acquire_threadsafe_function failed");
+        LOGE("AudioVideoDecodeCallback OnCodecError start napi_call_threadsafe_function failed");
         return;
     }
 }

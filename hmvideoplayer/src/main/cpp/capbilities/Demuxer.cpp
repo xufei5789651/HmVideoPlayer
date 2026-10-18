@@ -14,7 +14,7 @@ int32_t Demuxer::Create(SampleInfo &info) {
                  info.inputFd, info.inputFileOffset, info.inputFileSize);
         }
     } else if (info.url.size() > 0 &&
-               (info.url.find("https://") != std::string::npos || info.url.find("https://") != std::string::npos)) {
+               (info.url.find("https://") != std::string::npos || info.url.find("http://") != std::string::npos)) {
         // 在线视频
         char *url = const_cast<char *>(info.url.c_str());
         AVCODEC_SAMPLE_LOGD("Demuxer video url:%{public}s", url);
