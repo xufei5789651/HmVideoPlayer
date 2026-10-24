@@ -7,11 +7,11 @@
         "material": {
           "certpath": "C:\\Users\\ASUS\\.ohos\\config\\default_HmVideoPlayer_W4jdHcwfoVAfgvpmJ_N4S9ZNjioK9PprxTzltZCC-1o=.cer",
           "keyAlias": "debugKey",
-          "keyPassword": "000000196670E0C9B76EAB261BE0510E63734570C496AF92DDA020F73DED03E32A9AD22F74A0D1534E",
+          "keyPassword": "0000001B66EA00C715FF3E986E02F6C8BDC820A1828CA2204382B0F61654ADDEC15B037E2B9D4D193DA49A",
           "profile": "C:\\Users\\ASUS\\.ohos\\config\\default_HmVideoPlayer_W4jdHcwfoVAfgvpmJ_N4S9ZNjioK9PprxTzltZCC-1o=.p7b",
           "signAlg": "SHA256withECDSA",
           "storeFile": "C:\\Users\\ASUS\\.ohos\\config\\default_HmVideoPlayer_W4jdHcwfoVAfgvpmJ_N4S9ZNjioK9PprxTzltZCC-1o=.p12",
-          "storePassword": "00000019A36D784C755E187320CB59D843496B52F00F51C6FCB128E4084FDD4E2410EA652F7F465E83"
+          "storePassword": "0000001B1FFD22DEBE2073C5E81BA1E5BB08649C89AEE3DA41BDA612BDA0EA83BA956B9B1DE7662804D996"
         }
       }
     ],

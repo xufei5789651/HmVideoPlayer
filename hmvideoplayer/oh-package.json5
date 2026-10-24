@@ -3,7 +3,10 @@
   "version": "1.0.4",
   "description": "基于HarmonyOS SDK 一款视频播放器",
   "main": "Index.ets",
-  "author": "xufei5789651",
+  "author": {
+    "name": "xufei5789651",
+    "url": "https://github.com/xufei5789651"
+  },
   "homepage": "https://github.com/xufei5789651",
   "repository": "https://github.com/xufei5789651/HmVideoPlayer",
   "keywords": ["多媒体","视频播放器","播控中心"],
