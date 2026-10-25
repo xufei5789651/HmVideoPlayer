@@ -13,10 +13,11 @@ export class AvSessionManager {
   private avSession?: avSession.AVSession = undefined;
   private mediaInfo?: MediaInfo = undefined;
   private currentTimestamp: number = 0;
+  // 最近一次推送给播控中心的播放状态，供 setAvSessionSeekChanged 同步进度时复用
+  private playbackState: avSession.PlaybackState = avSession.PlaybackState.PLAYBACK_STATE_PLAY;
   private callbacks: Set<AvSessionCallback> = new Set();
 
-  setAvSessionPlaybackState(currentTimestamp: number,state: number){
-    this.currentTimestamp = currentTimestamp;
+  setAvSessionPlaybackState(state: number){
     if (this.avSession) {
       let avPlaybackState = this.setPlaybackState(state)
       this.avSession.setAVPlaybackState(avPlaybackState)
@@ -28,7 +29,7 @@ export class AvSessionManager {
     this.currentTimestamp = currentTimestamp;
     if (this.avSession) {
       this.avSession.setAVPlaybackState({
-        state: avSession.PlaybackState.PLAYBACK_STATE_PLAY,
+        state: this.playbackState,
         position: {
           elapsedTime: currentTimestamp,
           updateTime: new Date().getTime()
@@ -106,8 +107,9 @@ export class AvSessionManager {
         break
       case StateCode.ERROR:
         avState = avSession.PlaybackState.PLAYBACK_STATE_ERROR;
-        break
+        break;
     }
+    this.playbackState = avState;
     let result: avSession.AVPlaybackState = {
       state: avState,
       position: {

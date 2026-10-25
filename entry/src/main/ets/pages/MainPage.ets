@@ -104,7 +104,7 @@ struct MainPage {
           break;
       }
       if (this.avSessionManager) {
-        this.avSessionManager.setAvSessionPlaybackState(this.currentTimestamp* SECOND_TO_MS, state);
+        this.avSessionManager.setAvSessionPlaybackState(state);
       }
     });
 
@@ -162,8 +162,15 @@ struct MainPage {
 
   private setUpdateTimeCallback() {
     HmVideoPlayer.onTimeUpdate((timestamp: number) => {
-      this.currentTimestamp = Math.floor(timestamp / SECOND_TO_MS);
-      this.currentTimestampStr = secondToTime(Math.floor(timestamp / SECOND_TO_MS));
+      const seconds = Math.floor(timestamp / SECOND_TO_MS);
+      // 整秒变化时同步一次播控中心进度，避免高频推送
+      if (seconds !== this.currentTimestamp) {
+        this.currentTimestamp = seconds;
+        this.currentTimestampStr = secondToTime(seconds);
+        if (this.avSessionManager) {
+          this.avSessionManager.setAvSessionSeekChanged(seconds * SECOND_TO_MS);
+        }
+      }
     });
   }
 

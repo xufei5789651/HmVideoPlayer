@@ -84,7 +84,7 @@ setVideoPlayerCallback() {
       }
       
       if (this.avSessionManager) {
-        this.avSessionManager.setAvSessionPlaybackState(this.currentTimestamp* SECOND_TO_MS, state);
+        this.avSessionManager.setAvSessionPlaybackState(state);
       }
     });
 
@@ -145,7 +145,14 @@ private setVideoDuration()
 private setUpdateTimeCallback()
 {
   HmVideoPlayer.onTimeUpdate((timestamp: number) => {
-    this.currentTimestamp = Math.floor(timestamp / SECOND_TO_MS);
+    const seconds = Math.floor(timestamp / SECOND_TO_MS);
+    // 整秒变化时同步一次播控中心进度，避免高频推送
+    if (seconds !== this.currentTimestamp) {
+      this.currentTimestamp = seconds;
+      if (this.avSessionManager) {
+        this.avSessionManager.setAvSessionSeekChanged(seconds * SECOND_TO_MS);
+      }
+    }
   });
 }
 
@@ -192,7 +199,7 @@ onPageHide():void {
   | bindAvSession        |context:BaseContext, sessioname:string, type:AVSessionType, agentInfo:WantAgentInfo  | void | 绑定播控中心       |
   | addAvSessionCallback | callback: AvSessionCallback | void | 添加播控中心操作事件监听 |
   | removeAvSessionCallback | callback: AvSessionCallback | void | 移除播控中心操作事件监听 |
-  | setAvSessionPlaybackState | currentTimestamp: number,state: number | void | 设置播控中心的状态    |
+  | setAvSessionPlaybackState | state: number | void | 设置播控中心的状态    |
   | setAvSessionSeekChanged | currentTimestamp: number | void | 设置播控中心的进度条   |
 
 - AvSessionCallback 播控中心事件回调
@@ -201,12 +208,11 @@ onPageHide():void {
   | ---------- | ---------- |-------|
   | onNext     | () => void | 播放上一首 |
   | onPrevious | () => void | 播放下一首 |
-  | onPrevious | () => void | 播放下一首 |
   | play | () => void | 播放    |
   | pause | () => void | 暂停    |
   | seek | () => void | 同步进度  |
-  | fastForward | () => void | 同步进度  |
-  | rewind | () => void | 同步进度  |
+  | fastForward | () => void | 前进  |
+  | rewind | () => void | 后退  |
 
 ## 开源协议
 本项目基于 Apache License 2.0 ，在拷贝和借鉴代码时，请大家务必注明出处。
