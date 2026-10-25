@@ -1,7 +1,9 @@
-import { AvSessionCallback, AvSessionManager, HmVideoPlayer, MediaInfo, StateCode } from '@glodentime/hmvideoplayer';
+import { AvSessionCallback, AvSessionManager, AVCastManager, CastDeviceCallback, CastMediaInfo,
+  HmCastPicker, HmVideoPlayer, MediaInfo, StateCode } from '@glodentime/hmvideoplayer';
 import { display } from '@kit.ArkUI';
 import { secondToTime } from '../utils/Utils';
 import { audio } from '@kit.AudioKit';
+import { avSession } from '@kit.AVSessionKit';
 import { common, wantAgent } from '@kit.AbilityKit';
 
 const WIDTH_PX: number = 1920;
@@ -25,6 +27,10 @@ struct MainPage {
   @Local totalTimeStr: string = '00:00';
   @Local currentTimestamp: number = 0;
   @Local currentTimestampStr: string = '00:00';
+  // 投播相关状态
+  castManager: AVCastManager = new AVCastManager();
+  @Local isCasting: boolean = false;
+  castPosition: number = 0;
   wantAgentInfo: wantAgent.WantAgentInfo = {
     wants: [{
       bundleName: this.context.abilityInfo.bundleName,
@@ -75,6 +81,52 @@ struct MainPage {
     });
 
     this.avSessionManager.addAvSessionCallback(this.avSessionCallback);
+    this.setCastCallback();
+  }
+
+  // 投播能力注册：设备连接回调 + 远端状态监听
+  private setCastCallback() {
+    let castDeviceCallback: CastDeviceCallback = {
+      onConnected: (): void => {
+        // 远端投播设备连接成功：暂停本机播放，携带当前进度发起投播
+        console.info(TAG, 'cast device connected');
+        this.isCasting = true;
+        HmVideoPlayer.pause();
+        let castMediaInfo = new CastMediaInfo('HmVideo', 'HmVideo', this.URL);
+        castMediaInfo.duration = HmVideoPlayer.getDuration();
+        castMediaInfo.startPosition = this.currentTimestamp * SECOND_TO_MS;
+        this.castManager.startCast(castMediaInfo);
+      },
+      onDisconnected: (): void => {
+        // 远端投播设备断开：回到本机，从远端进度继续播放
+        console.info(TAG, 'cast device disconnected');
+        this.isCasting = false;
+        HmVideoPlayer.seek(BigInt(this.castPosition));
+        HmVideoPlayer.resume();
+      }
+    };
+    if (this.avSessionManager) {
+      this.castManager.setCastDeviceListener(this.avSessionManager, castDeviceCallback);
+    }
+
+    // 监听远端播放状态变化
+    this.castManager.onCastPlaybackStateChange((state: avSession.AVPlaybackState) => {
+      console.info(TAG, `cast playback state: ${state.state}`);
+      if (state.state === avSession.PlaybackState.PLAYBACK_STATE_PLAY) {
+        this.isPlay = true;
+      } else if (state.state === avSession.PlaybackState.PLAYBACK_STATE_PAUSE) {
+        this.isPlay = false;
+      }
+      if (state.position) {
+        this.castPosition = state.position.elapsedTime;
+      }
+    });
+
+    // 监听远端进度调节完成
+    this.castManager.onCastSeekDone((positionMs: number) => {
+      console.info(TAG, `cast seek done: ${positionMs}`);
+      this.castPosition = positionMs;
+    });
   }
 
   setVideoPlayerCallback() {
@@ -174,12 +226,24 @@ struct MainPage {
     });
   }
 
+  // 自定义投播按钮（自定义样式投播入口的显示内容）
+  @Builder
+  castButtonBuilder() {
+    Text('投播')
+      .fontSize(9)
+      .fontColor(Color.White)
+      .padding({ left: 6, right: 6, top: 4, bottom: 4 })
+      .borderRadius(10)
+      .border({ width: 1, color: Color.White })
+  }
+
   onPageHide(): void {
     HmVideoPlayer.stop();
     HmVideoPlayer.setBackgroundPlayEnable(this.context, this.wantAgentInfo, false);
     HmVideoPlayer.release();
     // avSession 相关方法
     if (this.avSessionManager) {
+      this.castManager.release();
       this.avSessionManager.removeAvSessionCallback(this.avSessionCallback);
       this.avSessionManager.release();
     }
@@ -207,7 +271,14 @@ struct MainPage {
             .height(24)
             .margin({ left: 8 })
             .onClick(() => {
-              if (this.isPlay) {
+              if (this.isCasting) {
+                // 投播中：控制远端播放
+                if (this.isPlay) {
+                  this.castManager.pause()
+                } else {
+                  this.castManager.play()
+                }
+              } else if (this.isPlay) {
                 HmVideoPlayer.pause()
               } else {
                 HmVideoPlayer.resume()
@@ -232,9 +303,14 @@ struct MainPage {
             .onChange((value: number, mode: SliderChangeMode) => {
               if (mode === SliderChangeMode.Begin || mode === SliderChangeMode.End) {
                 this.currentTimestamp = value;
-                HmVideoPlayer.seek(BigInt(value * SECOND_TO_MS));
-                if (this.avSessionManager) {
-                  this.avSessionManager.setAvSessionSeekChanged(this.currentTimestamp * SECOND_TO_MS);
+                if (this.isCasting) {
+                  // 投播中：控制远端进度
+                  this.castManager.seek(value * SECOND_TO_MS);
+                } else {
+                  HmVideoPlayer.seek(BigInt(value * SECOND_TO_MS));
+                  if (this.avSessionManager) {
+                    this.avSessionManager.setAvSessionSeekChanged(value * SECOND_TO_MS);
+                  }
                 }
               }
             })
@@ -244,6 +320,24 @@ struct MainPage {
             .fontColor(Color.White)
             .width(38)
             .margin({ left: 1, right: 3 })
+
+          // 投播入口（默认样式：系统投播图标）
+          HmCastPicker({
+            normalColor: Color.White,
+            sessionType: 'video'
+          })
+            .width(24)
+            .height(24)
+            .margin({ left: 4 })
+
+          // 投播入口（自定义样式：自定义"投播"按钮）
+          HmCastPicker({
+            sessionType: 'video',
+            customPickBuilder: (): void => {
+              this.castButtonBuilder()
+            }
+          })
+            .margin({ left: 4 })
         }
         .width('100%')
         .height(40)

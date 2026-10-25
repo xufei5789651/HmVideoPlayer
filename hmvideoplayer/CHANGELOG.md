@@ -1,3 +1,6 @@
+# 1.0.6
+新增音视频投播能力：封装 AVCastPicker（默认样式/自定义样式）与 AVCastController，支持投播设备监听、远端播放控制、远端状态与进度监听
+
 # 1.0.5
 移除 setAvSessionPlaybackState 的 currentTimestamp 参数，播控中心进度统一由 setAvSessionSeekChanged 同步，并修复暂停中拖动进度条时播控中心状态显示不一致的问题
 

@@ -214,5 +214,108 @@ onPageHide():void {
   | fastForward | () => void | 前进    |
   | rewind | () => void | 后退    |
 
+## 音视频投播
+
+支持通过投播组件选择投播设备（默认样式和自定义样式），将音视频投播到远端设备播放，并提供远端播放控制能力（`AVCastPicker` / `AVCastController` 封装）。
+
+### 使用示例
+
+```
+import { AVCastManager, CastDeviceCallback, CastMediaInfo, HmCastPicker } from '@glodentime/hmvideoplayer';
+
+// 1. 注册投播设备监听（bindAvSession 之后调用），远端设备连接成功后自动获取投播控制器
+this.castManager = new AVCastManager();
+let castDeviceCallback: CastDeviceCallback = {
+  onConnected: (): void => {
+    // 远端设备连接成功：暂停本机播放，携带当前进度发起投播
+    HmVideoPlayer.pause();
+    let castMediaInfo = new CastMediaInfo('HmVideo', 'HmVideo', this.URL);
+    castMediaInfo.duration = HmVideoPlayer.getDuration();
+    castMediaInfo.startPosition = this.currentTimestamp * 1000;
+    this.castManager.startCast(castMediaInfo);
+  },
+  onDisconnected: (): void => {
+    // 远端设备断开：回到本机继续播放
+    HmVideoPlayer.resume();
+  }
+};
+this.castManager.setCastDeviceListener(this.avSessionManager, castDeviceCallback);
+
+// 2. 投播中控制远端播放
+this.castManager.play();               // 远端播放
+this.castManager.pause();              // 远端暂停
+this.castManager.seek(position);       // 远端进度跳转（ms）
+this.castManager.setVolume(1);         // 远端音量设置
+
+// 3. 监听远端播放状态与进度
+this.castManager.onCastPlaybackStateChange((state: AVPlaybackState) => {});
+this.castManager.onCastSeekDone((positionMs: number) => {});
+
+// 4. 结束投播
+this.castManager.stopCast(this.avSessionManager);
+
+// 5. 投播入口组件（默认样式：系统投播图标）
+HmCastPicker({ sessionType: 'video' })
+
+// 6. 投播入口组件（自定义样式）
+@Builder
+castButtonBuilder() {
+  Text('投播')
+}
+
+HmCastPicker({
+  sessionType: 'video',
+  customPickBuilder: (): void => {
+    this.castButtonBuilder()
+  }
+})
+```
+
+### 接口能力
+
+- AVCastManager 投播管理
+
+  | 接口 | 参数 | 返回值 | 说明 |
+  | --- | --- | --- | --- |
+  | setCastDeviceListener | avSessionManager: AvSessionManager, callback: CastDeviceCallback | void | 注册投播设备监听，远端连接成功后自动获取投播控制器 |
+  | startCast | castMediaInfo: CastMediaInfo | Promise<boolean> | 开始投播（prepare + start） |
+  | stopCast | avSessionManager: AvSessionManager | Promise<void> | 结束投播 |
+  | play | void | Promise<void> | 远端播放 |
+  | pause | void | Promise<void> | 远端暂停 |
+  | seek | positionMs: number | Promise<void> | 远端进度跳转 |
+  | setVolume | volume: number | Promise<void> | 远端音量设置 |
+  | onCastPlaybackStateChange | callback: (state: AVPlaybackState) => void | void | 监听远端播放状态变化 |
+  | onCastSeekDone | callback: (positionMs: number) => void | void | 监听远端进度调节完成 |
+  | getCastPlaybackState | void | Promise<AVPlaybackState \| undefined> | 获取远端当前播放状态 |
+  | release | void | void | 释放投播资源 |
+
+- HmCastPicker 投播组件
+
+  | 属性 | 类型 | 说明 |
+  | --- | --- | --- |
+  | normalColor | Color \| number \| string | 正常状态颜色 |
+  | activeColor | Color \| number \| string | 设备连接成功状态颜色 |
+  | sessionType | string | 会话类型，默认 'video' |
+  | onStateChange | (state: AVCastPickerState) => void | 投播面板显示/消失回调 |
+  | customPickBuilder | CustomBuilder | 自定义样式；不传为系统默认样式 |
+
+- CastMediaInfo 投播媒体信息
+
+  | 属性 | 类型 | 说明 |
+  | --- | --- | --- |
+  | assetId | string | 媒体唯一标识 |
+  | title | string | 标题 |
+  | mediaUri | string | 网络资源地址 |
+  | duration | number | 时长（ms） |
+  | startPosition | number | 起播/续播进度（ms） |
+  | cover | string | 封面地址 |
+
+- CastDeviceCallback 投播设备事件回调
+
+  | 属性 | 类型 | 说明 |
+  | --- | --- | --- |
+  | onConnected | () => void | 远端投播设备连接成功 |
+  | onDisconnected | () => void | 远端投播设备断开 |
+
 ## 开源协议
 本项目基于 Apache License 2.0 ，在拷贝和借鉴代码时，请大家务必注明出处。

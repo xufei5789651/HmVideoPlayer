@@ -78,6 +78,10 @@ export class AvSessionManager {
     }
   }
 
+  getSession(): avSession.AVSession | undefined {
+    return this.avSession
+  }
+
   setMediaSource(mediaInfo: MediaInfo) {
     this.mediaInfo = mediaInfo
   }
@@ -127,7 +131,9 @@ export class AvSessionManager {
         assetId: this.avSession.sessionId,
         title: this.mediaInfo.title,
         mediaImage: this.mediaInfo.cover,
-        duration: HmVideoPlayer.getDuration()
+        duration: HmVideoPlayer.getDuration(),
+        // 发现 Cast+ Stream 和 DLNA 协议投播设备（投播开发指导要求）
+        filter: avSession.ProtocolType.TYPE_CAST_PLUS_STREAM | avSession.ProtocolType.TYPE_DLNA
       }
       this.avSession.setAVMetadata(data)
     }
